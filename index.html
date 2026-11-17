@@ -52,19 +52,17 @@
             text-align: center;
         }
         .login-logo {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             margin: 0 auto 15px auto;
             border-radius: 50%;
-            background: #1e3a8a;
-            color: #fff;
+            background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 900;
-            font-size: 20px;
             border: 3px solid #3b82f6;
             overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .login-logo img { width: 100%; height: 100%; object-fit: cover; }
         .login-box h1 {
@@ -97,14 +95,14 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
             color: #ffffff;
             padding: 0 5px 18px 5px;
             border-bottom: 1px solid rgba(255,255,255,0.2);
             margin-bottom: 15px;
         }
-        .brand img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+        .brand img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #fff; }
         .nav-list {
             flex: 1;
             overflow-y: auto;
@@ -276,7 +274,7 @@
         .st-locked { background: #fee2e2; color: #dc2626; }
         .hidden { display: none !important; }
 
-        /* --- PRINT STYLING (AGEC LOGO & HEADER) --- */
+        /* --- PRINT STYLING --- */
         @media print {
             body * { visibility: hidden; }
             #printableArea, #printableArea * { visibility: visible; }
@@ -291,16 +289,16 @@
             padding-bottom: 12px;
             margin-bottom: 20px;
         }
-        .print-header img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .print-header img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; }
     </style>
 </head>
 <body>
 
-    <!-- 1. SECURE LOGIN SCREEN -->
+    <!-- 1. LOGIN SCREEN -->
     <div id="loginScreen">
         <div class="login-box" onkeydown="checkLoginEnter(event)">
             <div class="login-logo">
-                <img src="logo.png" alt="AGEC" onerror="this.style.display='none'; this.parentElement.innerText='AGEC';">
+                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD..." alt="AGEC Logo" onerror="this.onerror=null; this.src='AGEC.jpg';">
             </div>
             <h1>ABIDHAR AL-GHAFAR</h1>
             <p class="subtitle">English Centre (AGEC) Portal</p>
@@ -308,6 +306,7 @@
             <label>Select Portal Type / Role</label>
             <select id="loginRole">
                 <option value="SUPER_ADMIN">Administrator (Super Admin)</option>
+                <option value="FINANCE">Finance Officer</option>
                 <option value="TEACHER">Teacher Portal</option>
                 <option value="STUDENT">Student Portal</option>
             </select>
@@ -320,7 +319,7 @@
 
             <button class="btn" style="width: 100%; margin-top: 8px;" onclick="handleLogin()">Login to System</button>
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px; text-align: center;">
-                💡 Press <b>Enter</b> to login. (Auto-logout after 1 hour of inactivity)
+                💡 Press <b>Enter</b> to login. (Auto-logout after 1 hour)
             </p>
         </div>
     </div>
@@ -329,7 +328,7 @@
     <div id="appLayout">
         <aside class="sidebar">
             <div class="brand">
-                <img src="logo.png" alt="AGEC" onerror="this.style.display='none';">
+                <img src="AGEC.jpg" alt="AGEC" onerror="this.style.display='none';">
                 <div>
                     AGEC Portal
                     <span id="sidebarRoleLabel" style="display:block; font-size:10px; color:var(--accent);">ONLINE</span>
@@ -353,9 +352,10 @@
     </div>
 
     <script>
-        // --- SYSTEM DATABASE ---
+        // --- SYSTEM USERS DATABASE ---
         let systemUsers = JSON.parse(localStorage.getItem('agec_smis_users')) || {
             SUPER_ADMIN: [{ username: 'admin', password: 'admin123', name: 'Suleiman Salum', locked: false }],
+            FINANCE: [{ username: 'fin_officer', password: 'fin123', name: 'Finance Manager', locked: false }],
             TEACHER: [
                 { username: 'tch_victor', password: 'pass123', name: 'Mr. Victor Bwachele', locked: false },
                 { username: 'tch_nahlat', password: 'pass123', name: 'Ms. Nahlat Khamis', locked: false }
@@ -373,7 +373,7 @@
                 { studentReg: 'AGEC-2026-001', studentName: 'Asha Salum Ali', subject: 'Advanced Grammar', score: 88, grade: 'A', status: 'Published' }
             ],
             payments: [
-                { id: 1, regNo: 'AGEC-2026-001', studentName: 'Asha Salum Ali', amount: 200000, date: '2026-11-01', method: 'Cash' }
+                { id: 1, regNo: 'AGEC-2026-001', studentName: 'Asha Salum Ali', amount: 200000, date: '2026-11-01', method: 'Cash', attachment: 'Receipt_001.pdf' }
             ],
             auditLogs: [
                 { time: '2026-11-17 08:00', user: 'System', role: 'SUPER_ADMIN', action: 'AGEC Portal Initialized' }
@@ -397,9 +397,8 @@
         // --- AUTO LOGOUT AFTER 1 HOUR ---
         function resetIdleTimer() {
             clearTimeout(idleTimer);
-            // 1 hour = 3600000 milliseconds
             idleTimer = setTimeout(() => {
-                alert('Session expired due to 1 hour of inactivity. Logging out automatically.');
+                alert('Session expired due to 1 hour of inactivity.');
                 handleLogout();
             }, 3600000);
         }
@@ -456,8 +455,12 @@
                     { key: 'students', label: '👨‍🎓 Student Management' },
                     { key: 'exams', label: '📝 Exams & Results' },
                     { key: 'finance', label: '💰 Finance Portal' },
-                    { key: 'manage_users', label: '⚙️ Manage Users & Security' },
+                    { key: 'manage_users', label: '⚙️ User Access Control' },
                     { key: 'audit', label: '🛡️ Audit Logs' }
+                ];
+            } else if (session.role === 'FINANCE') {
+                modules = [
+                    { key: 'finance', label: '💰 Finance & Receipts' }
                 ];
             } else if (session.role === 'TEACHER') {
                 modules = [
@@ -492,7 +495,6 @@
                 document.getElementById('activeModuleTitle').innerText = 'Admin Dashboard - AGEC';
                 ws.innerHTML = `
                     <div id="printableArea">
-                        <div class="print-header no-print"></div>
                         <div class="stats-grid">
                             <div class="stat-card"><div class="label">Total Students</div><div class="value">${db.students.length}</div></div>
                             <div class="stat-card"><div class="label">Active Teachers</div><div class="value">${systemUsers.TEACHER.length}</div></div>
@@ -500,7 +502,7 @@
                         </div>
                         <div class="card">
                             <h3>Welcome to Abidhar Al-ghafar English Centre (AGEC)</h3>
-                            <p style="color:var(--text-muted); font-size:13px;">Manage students, record fee payments, and generate official AGEC reports securely.</p>
+                            <p style="color:var(--text-muted); font-size:13px;">Manage users, monitor academics, and issue official AGEC reports securely.</p>
                         </div>
                     </div>
                     <button class="btn btn-warning no-print" onclick="printReport('Admin Dashboard Report')">🖨️ Print Report</button>
@@ -512,7 +514,7 @@
                         <div class="card">
                             <h3>
                                 <span>👨‍🎓 Student Management Directory</span>
-                                <input type="text" id="studentSearch" placeholder="Search student by name or reg..." onkeyup="filterStudents()" style="width:220px; margin:0; padding:6px; font-size:12px;" class="no-print">
+                                <input type="text" id="studentSearch" placeholder="Search student..." onkeyup="filterStudents()" style="width:200px; margin:0; padding:5px; font-size:12px;" class="no-print">
                             </h3>
                             <table>
                                <thead><tr><th>Reg No</th><th>Full Name</th><th>Class</th><th>Guardian</th><th>Status</th></tr></thead>
@@ -541,32 +543,46 @@
                     <button class="btn btn-warning no-print" onclick="printReport('Examination Results Report')">🖨️ Print Report</button>
                 `;
             } else if (mod === 'finance') {
-                document.getElementById('activeModuleTitle').innerText = 'Finance Portal - Record Payments';
+                document.getElementById('activeModuleTitle').innerText = 'Finance Portal - Record & Issue Receipts';
                 ws.innerHTML = `
-                    <div class="card">
-                        <h3>💰 Record Student Fee Payment</h3>
+                    <div class="card no-print">
+                        <h3>💰 Record Payment & Issue Receipt</h3>
                         <div class="form-grid">
                             <div><label>Student</label><select id="payReg">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select></div>
                             <div><label>Amount (TZS)</label><input type="number" id="payAmount" placeholder="50000"></div>
                             <div><label>Payment Method</label><select id="payMethod"><option>Cash</option><option>Bank / Control Number</option><option>Mobile Money</option></select></div>
+                            <div><label>Attach Receipt / Document</label><input type="file" id="payAttach"></div>
                         </div>
-                        <button class="btn btn-success" onclick="recordPayment()">Record Payment</button>
+                        <button class="btn btn-success" onclick="recordPayment()">Record & Issue Receipt</button>
                     </div>
 
-                    <div class="card" id="printableArea">
-                        <h3>📄 Payment History Logs</h3>
-                        <table>
-                            <thead><tr><th>ID</th><th>Reg No</th><th>Student Name</th><th>Amount (TZS)</th><th>Method</th><th>Date</th></tr></thead>
-                            <tbody>
-                                ${db.payments.map(p => `<tr><td>#${p.id}</td><td>${p.regNo}</td><td>${p.studentName}</td><td style="color:var(--success);"><strong>${p.amount.toLocaleString()}</strong></td><td>${p.method}</td><td>${p.date}</td></tr>`).join('')}
-                            </tbody>
-                        </table>
+                    <div id="printableArea">
+                        <div class="card">
+                            <h3>📄 Issued Payment Receipts & Attachments</h3>
+                            <table>
+                               <thead><tr><th>Receipt No</th><th>Reg No</th><th>Student Name</th><th>Amount</th><th>Method</th><th>Attachment</th></tr></thead>
+                               <tbody>
+                                   ${db.payments.map(p => `<tr><td><strong>#RCP-${p.id}</strong></td><td>${p.regNo}</td><td>${p.studentName}</td><td style="color:var(--success);">${p.amount.toLocaleString()} TZS</td><td>${p.method}</td><td>${p.attachment || 'None'}</td></tr>`).join('')}
+                               </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <button class="btn btn-warning no-print" onclick="printReport('Finance & Payments Report')">🖨️ Print Report</button>
+                    <button class="btn btn-warning no-print" onclick="printReport('Finance & Receipts Report')">🖨️ Print Report</button>
                 `;
             } else if (mod === 'manage_users') {
-                document.getElementById('activeModuleTitle').innerText = 'Manage Users & Security';
+                document.getElementById('activeModuleTitle').innerText = 'User Access Control';
                 ws.innerHTML = `
+                    <div class="card">
+                        <h3>➕ Create New User (Username & Password)</h3>
+                        <div class="form-grid">
+                            <div><label>Role</label><select id="newRole"><option value="TEACHER">Teacher</option><option value="FINANCE">Finance Officer</option><option value="STUDENT">Student</option></select></div>
+                            <div><label>Full Name</label><input type="text" id="newName" placeholder="Full Name"></div>
+                            <div><label>Username / Reg No</label><input type="text" id="newUsername" placeholder="Username"></div>
+                            <div><label>Password</label><input type="text" id="newPassword" placeholder="Password"></div>
+                        </div>
+                        <button class="btn btn-success" onclick="createNewUser()">Create Account</button>
+                    </div>
+
                     <div class="card">
                         <h3>🔒 User Access Control & Password Reset</h3>
                         <table>
@@ -588,7 +604,7 @@
                 `;
             } else if (mod === 'teacher_dashboard') {
                 document.getElementById('activeModuleTitle').innerText = 'Teacher Portal';
-                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">Use the left menu to submit student scores and print reports.</p></div>`;
+                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">Use the menu to submit student scores.</p></div>`;
             } else if (mod === 'enter_marks') {
                 document.getElementById('activeModuleTitle').innerText = 'Enter Student Marks';
                 ws.innerHTML = `
@@ -642,7 +658,6 @@
             }
         }
 
-        // --- SEARCH FILTER FUNCTION ---
         function filterStudents() {
             const query = document.getElementById('studentSearch').value.toLowerCase();
             const rows = document.querySelectorAll('#studentTableBody tr');
@@ -658,7 +673,7 @@
             const headerDiv = area.querySelector('.print-header') || document.createElement('div');
             headerDiv.className = 'print-header';
             headerDiv.innerHTML = `
-                <img src="logo.png" alt="AGEC Logo" onerror="this.style.display='none'">
+                <img src="AGEC.jpg" alt="AGEC Logo" onerror="this.style.display='none'">
                 <div>
                     <h2 style="color:#1e3a8a; font-size:18px;">ABIDHAR AL-GHAFAR ENGLISH CENTRE (AGEC)</h2>
                     <p style="font-size:12px; color:#555;">Official Report: ${title} | Generated on: ${new Date().toLocaleDateString()}</p>
@@ -668,20 +683,38 @@
             window.print();
         }
 
-        // --- FINANCE PAYMENT RECORDING ---
         function recordPayment() {
             const data = document.getElementById('payReg').value.split('|');
             const amount = parseInt(document.getElementById('payAmount').value);
             const method = document.getElementById('payMethod').value;
+            const attachFile = document.getElementById('payAttach').files[0];
+            const attachName = attachFile ? attachFile.name : 'No Attachment';
+
             if(!amount || amount <= 0) { alert('Enter valid amount.'); return; }
 
             const student = db.students.find(s => s.regNo === data[0]);
             student.feePaid += amount;
-            db.payments.unshift({ id: db.payments.length + 1, regNo: data[0], studentName: data[1], amount, date: new Date().toISOString().slice(0,10), method });
+            db.payments.unshift({ id: db.payments.length + 1, regNo: data[0], studentName: data[1], amount, date: new Date().toISOString().slice(0,10), method, attachment: attachName });
             saveSystem();
-            logAudit(`Recorded fee payment of ${amount} TZS for ${data[1]}`);
-            alert('Payment recorded successfully!');
+            logAudit(`Issued payment receipt for ${data[1]} (${amount} TZS)`);
+            alert('Payment recorded and receipt issued successfully!');
             renderModule('finance');
+        }
+
+        function createNewUser() {
+            const role = document.getElementById('newRole').value;
+            const name = document.getElementById('newName').value.trim();
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+
+            if(!name || !username || !password) { alert('Fill all fields.'); return; }
+            systemUsers[role].push({ username, password, name, locked: false });
+            if(role === 'STUDENT') {
+                db.students.push({ regNo: username, name: name, class: 'English Level 1', guardian: 'Parent', status: 'Active', feeTotal: 300000, feePaid: 0 });
+            }
+            saveSystem();
+            alert(`User ${name} created successfully!`);
+            renderModule('manage_users');
         }
 
         function teacherSubmitMarks() {
@@ -692,7 +725,6 @@
             const grade = score >= 80 ? 'A' : (score >= 70 ? 'B' : (score >= 60 ? 'C' : 'D'));
             db.exams.push({ studentReg: st[0], studentName: st[1], subject, score, grade, status: 'Published' });
             saveSystem();
-            logAudit(`Teacher submitted marks for ${st[1]}`);
             alert('Marks submitted successfully!');
             document.getElementById('mSubject').value = '';
             document.getElementById('mScore').value = '';
