@@ -3,8 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIPER MODERN SCHOOL PORTAL</title>
+    <title>SMART SCHOOL MANAGEMENT SYSTEM (SMIS)</title>
     <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #0b1120;
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --accent: #eab308;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
         * {
             box-sizing: border-box;
             margin: 0;
@@ -12,339 +25,957 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            background-color: #0f172a;
-            color: #f8fafc;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- LOGIN SCREEN --- */
+        #loginScreen {
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
         }
-        .container {
-            width: 100%;
-            max-width: 900px;
-            height: 92vh;
-            background: #1e293b;
+        .login-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            border: 1px solid #334155;
+            padding: 32px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .login-box h1 {
+            font-size: 22px;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .login-box p.subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        /* --- MAIN APP LAYOUT --- */
+        #appLayout {
+            display: none;
+            min-height: 100vh;
+            flex: 1;
+        }
+        .sidebar {
+            width: 260px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            position: relative;
+            padding: 20px 14px;
         }
-        header {
-            background: #0f172a;
-            padding: 15px 25px;
+        .brand {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary);
+            padding: 0 10px 18px 10px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+        .brand span {
+            display: block;
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-top: 3px;
+        }
+        .nav-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .nav-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.15s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #1e293b;
+            color: var(--primary);
+        }
+        .badge-count {
+            background: var(--danger);
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 12px;
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        .topbar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #334155;
         }
-        .school-title {
-            font-size: 20px;
-            font-weight: 800;
-            color: #38bdf8;
-            letter-spacing: 1px;
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
         }
-        .content {
+        .role-tag {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .workspace {
+            padding: 24px;
             flex: 1;
-            padding: 25px;
             overflow-y: auto;
         }
-        .btn {
-            background: #38bdf8;
-            color: #0f172a;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn:hover { background: #0ea5e9; }
-        .btn-danger { background: #ef4444; color: #fff; }
-        .btn-success { background: #22c55e; color: #fff; }
 
-        /* Forms & Inputs */
+        /* --- UI COMPONENTS --- */
+        .page-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 800;
+            margin-top: 6px;
+            color: var(--text-main);
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            font-size: 16px;
+            margin-bottom: 14px;
+            color: var(--primary);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
         input, select, textarea {
             width: 100%;
-            padding: 12px;
-            margin: 8px 0 16px 0;
-            background: #0f172a;
-            border: 1px solid #475569;
-            color: #fff;
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
             border-radius: 8px;
+            color: var(--text-main);
+            font-size: 13.5px;
+            margin-bottom: 12px;
             outline: none;
         }
-        label { font-size: 13px; color: #94a3b8; font-weight: 600; }
-        
-        /* Tables */
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+        .btn {
+            background: var(--primary);
+            color: #0f172a;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn:hover { background: var(--primary-hover); color: #fff; }
+        .btn-success { background: var(--success); color: #052e16; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-warning { background: var(--accent); color: #000; }
+        .btn-sm { padding: 5px 10px; font-size: 11.5px; }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
+            font-size: 13px;
         }
         th, td {
-            padding: 12px;
+            padding: 11px 12px;
             text-align: left;
-            border-bottom: 1px solid #334155;
-            font-size: 14px;
+            border-bottom: 1px solid var(--border);
         }
-        th { background: #0f172a; color: #38bdf8; }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+        th {
+            background: var(--bg-dark);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
         }
-        .stat-card {
-            background: #0f172a;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #334155;
+        .status-pill {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
         }
-        .stat-card h3 { font-size: 24px; color: #38bdf8; margin-top: 5px; }
+        .st-pending { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .st-reviewed { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+        .st-approved { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .st-rejected { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
         .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            #appLayout { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+            .nav-list { flex-direction: row; flex-wrap: wrap; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <div class="school-title">🎓 VIPER MODERN SCHOOL</div>
-            <div id="userHeaderInfo" class="hidden">
-                <span id="roleDisplay" style="color: #eab308; font-weight: bold; margin-right: 15px;"></span>
-                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="logout()">Logout</button>
+    <!-- 1. AUTHENTICATION / LOGIN PORTAL -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <h1>SMART SCHOOL SMIS</h1>
+            <p class="subtitle">Integrated School Management Information System</p>
+
+            <label>Select User Role (RBAC)</label>
+            <select id="loginRole">
+                <option value="SUPER_ADMIN">SUPER ADMIN (Owner / Full Control)</option>
+                <option value="HEADMASTER">HEADMASTER / PRINCIPAL (Approvals & Oversight)</option>
+                <option value="ACADEMIC_MASTER">ACADEMIC MASTER (Exams & Curriculum)</option>
+                <option value="ACCOUNTANT">ACCOUNTANT (Fees, Receipts & Expenses)</option>
+                <option value="TEACHER">TEACHER (Attendance & Marks Entry)</option>
+                <option value="HR_OFFICER">HR OFFICER (Staff & Leave Management)</option>
+                <option value="SECRETARY">SECRETARY / ADMISSIONS OFFICER</option>
+                <option value="LIBRARIAN">LIBRARIAN (Books & Lending)</option>
+                <option value="PARENT_STUDENT">PARENT / STUDENT PORTAL</option>
+            </select>
+
+            <label>Username / Full Name</label>
+            <input type="text" id="loginUsername" value="Suleiman Salum (Admin)" placeholder="Enter your name">
+
+            <label>Password</label>
+            <input type="password" id="loginPassword" value="admin123" placeholder="Enter password">
+
+            <button class="btn" style="width: 100%; margin-top: 8px;" onclick="handleLogin()">Access System</button>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px; text-align: center;">
+                All actions are logged in the System Audit Trail for security and accountability.
+            </p>
+        </div>
+    </div>
+
+    <!-- 2. INTEGRATED SMIS WORKSPACE -->
+    <div id="appLayout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                🎓 SMART SMIS
+                <span id="sidebarRoleLabel">SUPER ADMIN</span>
             </div>
-        </header>
+            <div class="nav-list" id="navMenu"></div>
+        </aside>
 
-        <div class="content" id="mainContent">
-            <!-- LOGIN SCREEN -->
-            <div id="loginScreen" style="max-width: 400px; margin: auto; padding-top: 40px;">
-                <h2 style="margin-bottom: 20px; color: #38bdf8;">Portal Login</h2>
-                <label>Select Role</label>
-                <select id="loginRole">
-                    <option value="admin">Administrator (Full Access)</option>
-                    <option value="teacher">Teacher / Staff (Data Entry)</option>
-                    <option value="student">Student / Parent (View Only)</option>
-                </select>
+        <!-- Main Workspace -->
+        <div class="main-area">
+            <header class="topbar">
+                <div style="font-weight: 700; font-size: 15px;" id="activeModuleTitle">Dashboard Overview</div>
+                <div class="user-pill">
+                    <span id="loggedUserDisplay">User</span>
+                    <span class="role-tag" id="loggedRoleBadge">ROLE</span>
+                    <button class="btn btn-danger btn-sm" onclick="handleLogout()">Logout</button>
+                </div>
+            </header>
 
-                <label>Username</label>
-                <input type="text" id="loginUser" placeholder="Enter username...">
-
-                <label>Password</label>
-                <input type="password" id="loginPass" placeholder="Enter password...">
-
-                <button class="btn" style="width: 100%; margin-top: 10px;" onclick="login()">Login to Portal</button>
+            <div class="workspace" id="workspaceContent">
+                <!-- Dynamic Module Content Renders Here -->
             </div>
-
-            <!-- ADMIN DASHBOARD -->
-            <div id="adminDashboard" class="hidden">
-                <h2 style="margin-bottom: 15px; color: #eab308;">Admin Control Center</h2>
-                <div class="card-grid">
-                    <div class="stat-card">
-                        <label>Total Students</label>
-                        <h3 id="statStudents">0</h3>
-                    </div>
-                    <div class="stat-card">
-                        <label>Pending Fee Approvals</label>
-                        <h3 id="statFees">0</h3>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button class="btn" onclick="switchAdminTab('studentsTab')">Manage Students</button>
-                    <button class="btn" onclick="switchAdminTab('feesTab')">Fee Approvals</button>
-                </div>
-
-                <!-- Students Section -->
-                <div id="studentsTab">
-                    <h3 style="margin-bottom: 10px;">Register New Student</h3>
-                    <input type="text" id="studentName" placeholder="Full Name">
-                    <input type="text" id="studentClass" placeholder="Class (e.g. Form One)">
-                    <button class="btn btn-success" onclick="addStudent()">Save Student</button>
-
-                    <h3 style="margin-top: 25px; margin-bottom: 10px;">Enrolled Students List</h3>
-                    <table>
-                        <thead>
-                            <tr><th>Name</th><th>Class</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="studentTableBody"></tbody>
-                    </table>
-                </div>
-
-                <!-- Fees Section -->
-                <div id="feesTab" class="hidden">
-                    <h3 style="margin-bottom: 10px;">Fee Payment Approvals</h3>
-                    <table>
-                        <thead>
-                            <tr><th>Student</th><th>Amount</th><th>Status</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="feesTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- TEACHER DASHBOARD -->
-            <div id="teacherDashboard" class="hidden">
-                <h2 style="margin-bottom: 15px; color: #38bdf8;">Teacher Portal - Data Entry</h2>
-                <p style="color: #94a3b8; margin-bottom: 15px;">You can record student exam scores and save them.</p>
-                
-                <label>Student Name</label>
-                <input type="text" id="examStudent" placeholder="Student Name">
-                <label>Subject & Score</label>
-                <input type="text" id="examDetails" placeholder="Subject and Marks (e.g. Mathematics - 85%)">
-                <button class="btn btn-success" onclick="saveExamRecord()">Save Record</button>
-
-                <h3 style="margin-top: 25px; margin-bottom: 10px;">Recorded Results</h3>
-                <table>
-                    <thead><tr><th>Student</th><th>Details</th></tr></thead>
-                    <tbody id="examTableBody"></tbody>
-                </table>
-            </div>
-
-            <!-- STUDENT DASHBOARD -->
-            <div id="studentDashboard" class="hidden">
-                <h2 style="margin-bottom: 15px; color: #38bdf8;">Student Portal</h2>
-                <p style="color: #94a3b8; margin-bottom: 15px;">Welcome! Here is your academic overview.</p>
-                
-                <div class="stat-card" style="margin-bottom: 20px;">
-                    <label>Fee Status</label>
-                    <h3 id="myFeeStatus" style="color: #22c55e;">Verified / Clear</h3>
-                </div>
-
-                <h3>My Exam Results</h3>
-                <table>
-                    <thead><tr><th>Subject & Score</th></tr></thead>
-                    <tbody id="studentResultsBody"></tbody>
-                </table>
-            </div>
-
         </div>
     </div>
 
     <script>
-        // LocalStorage Data Setup
-        let db = JSON.parse(localStorage.getItem('viper_school_db')) || {
-            students: [{name: "Asha Salum", class: "Form 1"}],
-            fees: [{student: "Asha Salum", amount: "150,000 TZS", status: "Pending"}],
-            exams: [{student: "Asha Salum", details: "Mathematics - 88%"}]
+        // --- ROLE-BASED ACCESS CONTROL (RBAC) CONFIGURATION ---
+        const ROLE_PERMISSIONS = {
+            SUPER_ADMIN: ['dashboard', 'students', 'academics', 'exams', 'finance', 'attendance', 'hr', 'operations', 'portal', 'audit', 'users'],
+            HEADMASTER: ['dashboard', 'students', 'academics', 'exams', 'finance', 'attendance', 'hr', 'operations', 'audit'],
+            ACADEMIC_MASTER: ['dashboard', 'students', 'academics', 'exams', 'attendance'],
+            ACCOUNTANT: ['dashboard', 'students', 'finance'],
+            TEACHER: ['dashboard', 'academics', 'exams', 'attendance'],
+            HR_OFFICER: ['dashboard', 'hr', 'attendance'],
+            SECRETARY: ['dashboard', 'students', 'operations'],
+            LIBRARIAN: ['dashboard', 'operations'],
+            PARENT_STUDENT: ['portal']
         };
 
-        let currentUser = null;
+        const MODULE_LABELS = {
+            dashboard: '📊 Dashboard & Analytics',
+            students: '👨‍🎓 Student Management',
+            academics: '📚 Academics & Timetable',
+            exams: '📝 Exams & Results Workflow',
+            finance: '💰 Finance & Accounting',
+            attendance: '✅ Attendance Tracking',
+            hr: '👔 Human Resources (HR)',
+            operations: '🏫 Library, Transport & Boarding',
+            portal: '👪 Parent & Student Portal',
+            audit: '🛡️ Audit Trail & Logs',
+            users: '⚙️ User Roles & Permissions'
+        };
 
-        function saveData() {
-            localStorage.setItem('viper_school_db', JSON.stringify(db));
+        // --- CENTRAL DATABASE (LOCALSTORAGE) ---
+        let db = JSON.parse(localStorage.getItem('smart_smis_db')) || {
+            students: [
+                { regNo: 'SMIS-2026-001', name: 'Asha Salum Ali', class: 'Form 4A', guardian: 'Salum Ali (+255 777 000 111)', status: 'Active', feeTotal: 500000, feePaid: 350000 },
+                { regNo: 'SMIS-2026-002', name: 'Tariq Hassan Juma', class: 'Form 2B', guardian: 'Hassan Juma (+255 713 222 333)', status: 'Active', feeTotal: 500000, feePaid: 500000 }
+            ],
+            classes: [
+                { name: 'Form 1A', teacher: 'Mr. Victor Bwachele', subjects: 'Math, English, Physics, Chemistry' },
+                { name: 'Form 4A', teacher: 'Ms. Nahlat Khamis', subjects: 'Accountancy, Commerce, Economics, Math' }
+            ],
+            exams: [
+                { id: 101, studentReg: 'SMIS-2026-001', studentName: 'Asha Salum Ali', subject: 'Accountancy', score: 88, grade: 'A', status: 'Published', enteredBy: 'Teacher' },
+                { id: 102, studentReg: 'SMIS-2026-002', studentName: 'Tariq Hassan Juma', subject: 'Mathematics', score: 74, grade: 'B', status: 'Pending Academic Review', enteredBy: 'Teacher' }
+            ],
+            payments: [
+                { receipt: 'RCP-9001', studentReg: 'SMIS-2026-001', studentName: 'Asha Salum Ali', amount: 350000, method: 'Bank / Control No', date: '2026-10-15' }
+            ],
+            expenses: [
+                { id: 201, title: 'Science Lab Chemicals', amount: 180000, recordedBy: 'Accountant', status: 'Pending Approval' }
+            ],
+            attendance: [
+                { date: '2026-11-17', target: 'Asha Salum Ali (Student)', status: 'Present' },
+                { date: '2026-11-17', target: 'Mr. Victor Bwachele (Staff)', status: 'Present' }
+            ],
+            staff: [
+                { id: 'STF-01', name: 'Victor Bwachele', role: 'Senior Teacher', salary: 1200000, status: 'Active' },
+                { id: 'STF-02', name: 'Nahlat Khamis', role: 'Academic Master', salary: 1400000, status: 'Active' }
+            ],
+            leaves: [
+                { id: 301, staffName: 'Victor Bwachele', reason: 'Annual Family Leave (5 Days)', status: 'Pending' }
+            ],
+            library: [
+                { book: 'Principles of Accounting Vol 2', borrower: 'Asha Salum Ali', status: 'Borrowed' }
+            ],
+            transport: [
+                { vehicle: 'T 452 DXY - School Bus 1', route: 'Mtendeni - Town Center', driver: 'Juma Omar' }
+            ],
+            announcements: [
+                { date: '2026-11-15', title: 'End of Term Examinations', message: 'Final exams begin on November 25th. Clear all pending fee balances.' }
+            ],
+            auditLogs: [
+                { time: '2026-11-17 08:00', user: 'System', role: 'SUPER_ADMIN', action: 'Initialized Smart SMIS Database' }
+            ]
+        };
+
+        let session = { user: '', role: '' };
+
+        function saveDB() {
+            localStorage.setItem('smart_smis_db', JSON.stringify(db));
         }
 
-        function login() {
+        function logAudit(action) {
+            const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            db.auditLogs.unshift({
+                time: now,
+                user: session.user,
+                role: session.role,
+                action: action
+            });
+            saveDB();
+        }
+
+        function calculateGrade(score) {
+            if (score >= 80) return 'A';
+            if (score >= 70) return 'B';
+            if (score >= 60) return 'C';
+            if (score >= 50) return 'D';
+            return 'F';
+        }
+
+        // --- LOGIN & NAVIGATION ---
+        function handleLogin() {
             const role = document.getElementById('loginRole').value;
-            const user = document.getElementById('loginUser').value;
-            if(!user) { alert("Please enter username"); return; }
+            const user = document.getElementById('loginUsername').value.trim();
+            if (!user) { alert('Please enter your username.'); return; }
 
-            currentUser = { role, user };
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('userHeaderInfo').classList.remove('hidden');
-            document.getElementById('roleDisplay').innerText = `Role: ${role.toUpperCase()} (${user})`;
+            session = { user, role };
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appLayout').style.display = 'flex';
+            document.getElementById('sidebarRoleLabel').innerText = role.replace('_', ' ');
+            document.getElementById('loggedUserDisplay').innerText = user;
+            document.getElementById('loggedRoleBadge').innerText = role.replace('_', ' ');
 
-            if(role === 'admin') {
-                document.getElementById('adminDashboard').classList.remove('hidden');
-                renderAdminData();
-            } else if(role === 'teacher') {
-                document.getElementById('teacherDashboard').classList.remove('hidden');
-                renderTeacherData();
-            } else if(role === 'student') {
-                document.getElementById('studentDashboard').classList.remove('hidden');
-                renderStudentData();
+            logAudit(`Logged into the system`);
+            buildMenu();
+        }
+
+        function handleLogout() {
+            logAudit(`Logged out of the system`);
+            document.getElementById('appLayout').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+
+        function buildMenu() {
+            const allowedModules = ROLE_PERMISSIONS[session.role] || ['dashboard'];
+            const navMenu = document.getElementById('navMenu');
+            navMenu.innerHTML = '';
+
+            const pendingApprovals = db.exams.filter(e => e.status !== 'Published').length +
+                                     db.expenses.filter(x => x.status === 'Pending Approval').length +
+                                     db.leaves.filter(l => l.status === 'Pending').length;
+
+            allowedModules.forEach((modKey, idx) => {
+                const item = document.createElement('div');
+                item.className = `nav-item ${idx === 0 ? 'active' : ''}`;
+                let badge = '';
+                if ((modKey === 'exams' || modKey === 'finance' || modKey === 'hr') && pendingApprovals > 0 && ['SUPER_ADMIN', 'HEADMASTER', 'ACADEMIC_MASTER', 'HR_OFFICER'].includes(session.role)) {
+                    if (modKey === 'exams' && db.exams.filter(e => e.status !== 'Published').length > 0) {
+                        badge = `<span class="badge-count">${db.exams.filter(e => e.status !== 'Published').length}</span>`;
+                    }
+                    if (modKey === 'finance' && db.expenses.filter(x => x.status === 'Pending Approval').length > 0) {
+                        badge = `<span class="badge-count">${db.expenses.filter(x => x.status === 'Pending Approval').length}</span>`;
+                    }
+                    if (modKey === 'hr' && db.leaves.filter(l => l.status === 'Pending').length > 0) {
+                        badge = `<span class="badge-count">${db.leaves.filter(l => l.status === 'Pending').length}</span>`;
+                    }
+                }
+                item.innerHTML = `<span>${MODULE_LABELS[modKey]}</span> ${badge}`;
+                item.onclick = () => {
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    item.classList.add('active');
+                    renderModule(modKey);
+                };
+                navMenu.appendChild(item);
+            });
+
+            renderModule(allowedModules[0]);
+        }
+
+        // --- RENDER MODULES ---
+        function renderModule(mod) {
+            document.getElementById('activeModuleTitle').innerText = MODULE_LABELS[mod];
+            const ws = document.getElementById('workspaceContent');
+
+            if (mod === 'dashboard') {
+                const totalFees = db.students.reduce((sum, s) => sum + s.feeTotal, 0);
+                const collectedFees = db.students.reduce((sum, s) => sum + s.feePaid, 0);
+                const outstanding = totalFees - collectedFees;
+                const pendingCount = db.exams.filter(e => e.status !== 'Published').length +
+                                     db.expenses.filter(x => x.status === 'Pending Approval').length +
+                                     db.leaves.filter(l => l.status === 'Pending').length;
+
+                ws.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="label">Total Students</div><div class="value" style="color:var(--primary);">${db.students.length}</div></div>
+                        <div class="stat-card"><div class="label">Teachers & Staff</div><div class="value">${db.staff.length}</div></div>
+                        <div class="stat-card"><div class="label">Fees Collected (TZS)</div><div class="value" style="color:var(--success);">${collectedFees.toLocaleString()}</div></div>
+                        <div class="stat-card"><div class="label">Outstanding Fees (TZS)</div><div class="value" style="color:var(--danger);">${outstanding.toLocaleString()}</div></div>
+                        <div class="stat-card"><div class="label">Pending Approvals</div><div class="value" style="color:var(--accent);">${pendingCount}</div></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📢 School Announcements & Notices</h3>
+                        ${db.announcements.map(a => `<div style="padding:10px 0; border-bottom:1px solid var(--border);"><strong>${a.title}</strong> <span style="font-size:11px; color:var(--text-muted);">(${a.date})</span><p style="font-size:13px; color:var(--text-muted); margin-top:4px;">${a.message}</p></div>`).join('')}
+                    </div>
+
+                    <div class="card">
+                        <h3>🕒 Recent System Activity (Audit Preview)</h3>
+                        <table>
+                            <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th></tr></thead>
+                            <tbody>
+                                ${db.auditLogs.slice(0, 5).map(l => `<tr><td>${l.time}</td><td>${l.user}</td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'students') {
+                const canRegister = ['SUPER_ADMIN', 'HEADMASTER', 'SECRETARY'].includes(session.role);
+                ws.innerHTML = `
+                    ${canRegister ? `
+                    <div class="card">
+                        <h3>➕ Student Admission & Auto-Registration</h3>
+                        <div class="form-grid">
+                            <div><label>Student Full Name</label><input type="text" id="stName" placeholder="e.g. Suleiman Salum"></div>
+                            <div><label>Class / Stream</label><input type="text" id="stClass" placeholder="e.g. Form 1A"></div>
+                            <div><label>Parent / Guardian Contact</label><input type="text" id="stGuard" placeholder="Name & Phone"></div>
+                            <div><label>Annual Tuition Fee (TZS)</label><input type="number" id="stFee" value="500000"></div>
+                        </div>
+                        <button class="btn btn-success" onclick="registerStudent()">Register Student & Generate Reg No</button>
+                    </div>` : ''}
+
+                    <div class="card">
+                        <h3>📋 Enrolled Students Directory</h3>
+                        <table>
+                            <thead><tr><th>Reg Number</th><th>Full Name</th><th>Class</th><th>Guardian</th><th>Fee Balance (TZS)</th><th>Status</th></tr></thead>
+                            <tbody>
+                                ${db.students.map(s => `
+                                    <tr>
+                                        <td><strong>${s.regNo}</strong></td>
+                                        <td>${s.name}</td>
+                                        <td>${s.class}</td>
+                                        <td>${s.guardian}</td>
+                                        <td style="color:${(s.feeTotal - s.feePaid) > 0 ? 'var(--danger)' : 'var(--success)'};">${(s.feeTotal - s.feePaid).toLocaleString()}</td>
+                                        <td><span class="status-pill st-approved">${s.status}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'academics') {
+                const canManageClass = ['SUPER_ADMIN', 'HEADMASTER', 'ACADEMIC_MASTER'].includes(session.role);
+                ws.innerHTML = `
+                    ${canManageClass ? `
+                    <div class="card">
+                        <h3>🏫 Create Class & Assign Teacher</h3>
+                        <div class="form-grid">
+                            <div><label>Class & Stream</label><input type="text" id="clsName" placeholder="e.g. Form 3B"></div>
+                            <div><label>Class Teacher</label><input type="text" id="clsTeacher" placeholder="Teacher Name"></div>
+                            <div><label>Subjects</label><input type="text" id="clsSubjects" placeholder="Math, Biology, Civics..."></div>
+                        </div>
+                        <button class="btn" onclick="addClass()">Save Class Allocation</button>
+                    </div>` : ''}
+
+                    <div class="card">
+                        <h3>📅 Active Classes & Curriculum</h3>
+                        <table>
+                            <thead><tr><th>Class</th><th>Assigned Teacher</th><th>Subjects</th></tr></thead>
+                            <tbody>
+                                ${db.classes.map(c => `<tr><td><strong>${c.name}</strong></td><td>${c.teacher}</td><td>${c.subjects}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'exams') {
+                const canEnter = ['SUPER_ADMIN', 'TEACHER', 'ACADEMIC_MASTER'].includes(session.role);
+                const isAcademic = ['SUPER_ADMIN', 'ACADEMIC_MASTER'].includes(session.role);
+                const isHeadmaster = ['SUPER_ADMIN', 'HEADMASTER'].includes(session.role);
+
+                ws.innerHTML = `
+                    ${canEnter ? `
+                    <div class="card">
+                        <h3>✍️ Enter Student Examination Marks</h3>
+                        <div class="form-grid">
+                            <div>
+                                <label>Select Student</label>
+                                <select id="exStudent">
+                                    ${db.students.map(s => `<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div><label>Subject</label><input type="text" id="exSubject" placeholder="e.g. Physics"></div>
+                            <div><label>Marks (0 - 100)</label><input type="number" id="exScore" min="0" max="100" placeholder="85"></div>
+                        </div>
+                        <button class="btn" onclick="submitExamMarks()">Submit Marks for Academic Verification</button>
+                    </div>` : ''}
+
+                    <div class="card">
+                        <h3>✅ Examination Results & Multi-Step Approval Workflow</h3>
+                        <table>
+                            <thead><tr><th>Student</th><th>Subject</th><th>Score</th><th>Grade</th><th>Workflow Status</th><th>Approval Actions</th></tr></thead>
+                            <tbody>
+                                ${db.exams.map((ex, i) => {
+                                    let statusClass = ex.status === 'Published' ? 'st-approved' : (ex.status.includes('Academic') ? 'st-pending' : 'st-reviewed');
+                                    let actions = '-';
+                                    if (ex.status === 'Pending Academic Review' && isAcademic) {
+                                        actions = `<button class="btn btn-success btn-sm" onclick="verifyExam(${i}, 'Verified - Awaiting Headmaster')">Verify</button>
+                                                   <button class="btn btn-danger btn-sm" onclick="verifyExam(${i}, 'Returned for Correction')">Return</button>`;
+                                    } else if (ex.status === 'Verified - Awaiting Headmaster' && isHeadmaster) {
+                                        actions = `<button class="btn btn-success btn-sm" onclick="verifyExam(${i}, 'Published')">Approve & Publish</button>`;
+                                    }
+                                    return `<tr>
+                                        <td>${ex.studentName} (${ex.studentReg})</td>
+                                        <td>${ex.subject}</td>
+                                        <td><strong>${ex.score}%</strong></td>
+                                        <td><strong>${ex.grade}</strong></td>
+                                        <td><span class="status-pill ${statusClass}">${ex.status}</span></td>
+                                        <td>${actions}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'finance') {
+                const isAccountant = ['SUPER_ADMIN', 'ACCOUNTANT'].includes(session.role);
+                const canApproveExp = ['SUPER_ADMIN', 'HEADMASTER'].includes(session.role);
+
+                ws.innerHTML = `
+                    ${isAccountant ? `
+                    <div class="form-grid">
+                        <div class="card">
+                            <h3>💵 Record Fee Payment & Generate Receipt</h3>
+                            <label>Student</label>
+                            <select id="payStudent">
+                                ${db.students.map(s => `<option value="${s.regNo}">${s.regNo} - ${s.name} (Bal: ${(s.feeTotal-s.feePaid).toLocaleString()})</option>`).join('')}
+                            </select>
+                            <label>Amount Paid (TZS)</label>
+                            <input type="number" id="payAmount" placeholder="150000">
+                            <label>Payment Channel</label>
+                            <select id="payMethod"><option>Bank Deposit / Control No</option><option>Mobile Money (M-Pesa / TigoPesa)</option><option>Cash</option></select>
+                            <button class="btn btn-success" onclick="recordPayment()">Save & Issue Receipt</button>
+                        </div>
+
+                        <div class="card">
+                            <h3>🧾 Record School Expense (Requires Approval)</h3>
+                            <label>Expense Description</label>
+                            <input type="text" id="expTitle" placeholder="e.g. Electricity Bill / Chalks">
+                            <label>Amount (TZS)</label>
+                            <input type="number" id="expAmount" placeholder="50000">
+                            <button class="btn btn-warning" onclick="recordExpense()">Submit Expense for Approval</button>
+                        </div>
+                    </div>` : ''}
+
+                    <div class="card">
+                        <h3>📄 Fee Payment Receipts</h3>
+                        <table>
+                            <thead><tr><th>Receipt No</th><th>Student</th><th>Amount (TZS)</th><th>Method</th><th>Date</th></tr></thead>
+                            <tbody>
+                                ${db.payments.map(p => `<tr><td><strong>${p.receipt}</strong></td><td>${p.studentName}</td><td style="color:var(--success);">${p.amount.toLocaleString()}</td><td>${p.method}</td><td>${p.date}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔍 Expense Approvals</h3>
+                        <table>
+                            <thead><tr><th>Description</th><th>Amount (TZS)</th><th>Recorded By</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody>
+                                ${db.expenses.map((x, i) => `
+                                    <tr>
+                                        <td>${x.title}</td>
+                                        <td>${x.amount.toLocaleString()}</td>
+                                        <td>${x.recordedBy}</td>
+                                        <td><span class="status-pill ${x.status === 'Approved' ? 'st-approved' : 'st-pending'}">${x.status}</span></td>
+                                        <td>${x.status === 'Pending Approval' && canApproveExp ? `<button class="btn btn-success btn-sm" onclick="approveExpense(${i})">Approve</button>` : 'Done'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'attendance') {
+                ws.innerHTML = `
+                    <div class="card">
+                        <h3>📋 Daily Attendance Register</h3>
+                        <div class="form-grid">
+                            <div><label>Student or Staff Name</label><input type="text" id="attTarget" placeholder="Enter Name"></div>
+                            <div><label>Status</label><select id="attStatus"><option>Present</option><option>Late</option><option>Absent (Notify Guardian)</option></select></div>
+                        </div>
+                        <button class="btn" onclick="markAttendance()">Save Attendance</button>
+                    </div>
+                    <div class="card">
+                        <h3>📅 Attendance Logs</h3>
+                        <table>
+                            <thead><tr><th>Date</th><th>Name / Role</th><th>Status</th></tr></thead>
+                            <tbody>
+                                ${db.attendance.map(a => `<tr><td>${a.date}</td><td>${a.target}</td><td><span class="status-pill ${a.status === 'Present' ? 'st-approved' : 'st-pending'}">${a.status}</span></td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'hr') {
+                const canApproveLeave = ['SUPER_ADMIN', 'HEADMASTER', 'HR_OFFICER'].includes(session.role);
+                ws.innerHTML = `
+                    <div class="card">
+                        <h3>👔 Staff Directory & Payroll Summary</h3>
+                        <table>
+                            <thead><tr><th>Staff ID</th><th>Full Name</th><th>Position</th><th>Monthly Salary (TZS)</th><th>Status</th></tr></thead>
+                            <tbody>
+                                ${db.staff.map(s => `<tr><td>${s.id}</td><td><strong>${s.name}</strong></td><td>${s.role}</td><td>${s.salary.toLocaleString()}</td><td><span class="status-pill st-approved">${s.status}</span></td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3>🏖️ Leave Requests & Approvals</h3>
+                        <div class="form-grid">
+                            <div><label>Staff Name</label><input type="text" id="lvName" placeholder="Staff Name"></div>
+                            <div><label>Leave Reason & Duration</label><input type="text" id="lvReason" placeholder="e.g. Medical Leave (3 days)"></div>
+                        </div>
+                        <button class="btn" onclick="requestLeave()">Submit Leave Request</button>
+
+                        <table style="margin-top:15px;">
+                            <thead><tr><th>Staff</th><th>Reason</th><th>Status</th><th>Decision</th></tr></thead>
+                            <tbody>
+                                ${db.leaves.map((l, i) => `
+                                    <tr>
+                                        <td>${l.staffName}</td>
+                                        <td>${l.reason}</td>
+                                        <td><span class="status-pill ${l.status === 'Approved' ? 'st-approved' : 'st-pending'}">${l.status}</span></td>
+                                        <td>${l.status === 'Pending' && canApproveLeave ? `<button class="btn btn-success btn-sm" onclick="approveLeave(${i})">Approve</button>` : 'Completed'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'operations') {
+                ws.innerHTML = `
+                    <div class="form-grid">
+                        <div class="card">
+                            <h3>📖 Library Management</h3>
+                            <label>Book Title</label><input type="text" id="libBook" placeholder="Book Name">
+                            <label>Borrower Name</label><input type="text" id="libUser" placeholder="Student / Teacher">
+                            <button class="btn" onclick="issueBook()">Issue Book</button>
+                            <table style="margin-top:12px;">
+                                <thead><tr><th>Book</th><th>Borrower</th><th>Status</th></tr></thead>
+                                <tbody>${db.library.map(b => `<tr><td>${b.book}</td><td>${b.borrower}</td><td>${b.status}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
+
+                        <div class="card">
+                            <h3>🚌 Transport & Fleet</h3>
+                            <table>
+                                <thead><tr><th>Vehicle</th><th>Route</th><th>Driver</th></tr></thead>
+                                <tbody>${db.transport.map(t => `<tr><td>${t.vehicle}</td><td>${t.route}</td><td>${t.driver}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'portal') {
+                const student = db.students[0];
+                const publishedExams = db.exams.filter(e => e.status === 'Published');
+                ws.innerHTML = `
+                    <div class="card">
+                        <h3>🎓 Student Profile: ${student.name} (${student.regNo})</h3>
+                        <p style="color:var(--text-muted); font-size:13px;">Class: <strong>${student.class}</strong> | Guardian: <strong>${student.guardian}</strong></p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="label">Total Annual Fee</div><div class="value">${student.feeTotal.toLocaleString()} TZS</div></div>
+                        <div class="stat-card"><div class="label">Paid Amount</div><div class="value" style="color:var(--success);">${student.feePaid.toLocaleString()} TZS</div></div>
+                        <div class="stat-card"><div class="label">Remaining Balance</div><div class="value" style="color:var(--danger);">${(student.feeTotal - student.feePaid).toLocaleString()} TZS</div></div>
+                    </div>
+                    <div class="card">
+                        <h3>📄 Official Published Exam Results</h3>
+                        <table>
+                            <thead><tr><th>Subject</th><th>Marks</th><th>Grade</th><th>Status</th></tr></thead>
+                            <tbody>
+                                ${publishedExams.map(e => `<tr><td>${e.subject}</td><td>${e.score}%</td><td><strong>${e.grade}</strong></td><td><span class="status-pill st-approved">Official</span></td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'audit') {
+                ws.innerHTML = `
+                    <div class="card">
+                        <h3>🛡️ System Audit Trail & Accountability Logs</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Immutable record of system entries, modifications, and approvals.</p>
+                        <table>
+                            <thead><tr><th>Timestamp</th><th>User</th><th>Role</th><th>Action Performed</th></tr></thead>
+                            <tbody>
+                                ${db.auditLogs.map(l => `<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            else if (mod === 'users') {
+                ws.innerHTML = `
+                    <div class="card">
+                        <h3>⚙️ Role-Based Access Control (RBAC) Matrix</h3>
+                        <table>
+                            <thead><tr><th>Role</th><th>Assigned System Modules</th></tr></thead>
+                            <tbody>
+                                ${Object.entries(ROLE_PERMISSIONS).map(([r, mods]) => `<tr><td><strong>${r}</strong></td><td>${mods.join(', ').toUpperCase()}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
             }
         }
 
-        function logout() {
-            currentUser = null;
-            document.getElementById('userHeaderInfo').classList.add('hidden');
-            document.querySelectorAll('.content > div').forEach(d => d.classList.add('hidden'));
-            document.getElementById('loginScreen').classList.remove('hidden');
+        // --- ACTION HANDLERS ---
+        function registerStudent() {
+            const name = document.getElementById('stName').value.trim();
+            const cls = document.getElementById('stClass').value.trim();
+            const guard = document.getElementById('stGuard').value.trim();
+            const fee = parseInt(document.getElementById('stFee').value) || 500000;
+            if (!name || !cls) { alert('Please enter student name and class.'); return; }
+
+            const regNo = `SMIS-2026-00${db.students.length + 1}`;
+            db.students.push({ regNo, name, class: cls, guardian: guard || 'N/A', status: 'Active', feeTotal: fee, feePaid: 0 });
+            logAudit(`Registered new student: ${name} (${regNo})`);
+            renderModule('students');
         }
 
-        // --- ADMIN FUNCTIONS ---
-        function switchAdminTab(tabId) {
-            document.getElementById('studentsTab').classList.add('hidden');
-            document.getElementById('feesTab').classList.add('hidden');
-            document.getElementById(tabId).classList.remove('hidden');
+        function addClass() {
+            const name = document.getElementById('clsName').value.trim();
+            const teacher = document.getElementById('clsTeacher').value.trim();
+            const subjects = document.getElementById('clsSubjects').value.trim();
+            if (!name || !teacher) return;
+            db.classes.push({ name, teacher, subjects });
+            logAudit(`Created class ${name} assigned to ${teacher}`);
+            renderModule('academics');
         }
 
-        function addStudent() {
-            const name = document.getElementById('studentName').value;
-            const cls = document.getElementById('studentClass').value;
-            if(!name || !cls) { alert("Fill all fields"); return; }
+        function submitExamMarks() {
+            const stData = document.getElementById('exStudent').value.split('|');
+            const subject = document.getElementById('exSubject').value.trim();
+            const score = parseInt(document.getElementById('exScore').value);
+            if (!subject || isNaN(score)) { alert('Enter valid subject and marks.'); return; }
 
-            db.students.push({name, class: cls});
-            db.fees.push({student: name, amount: "200,000 TZS", status: "Pending"});
-            saveData();
-            renderAdminData();
-            document.getElementById('studentName').value = '';
-            document.getElementById('studentClass').value = '';
-        }
-
-        function approveFee(index) {
-            db.fees[index].status = "Approved ✅";
-            saveData();
-            renderAdminData();
-        }
-
-        function deleteStudent(index) {
-            db.students.splice(index, 1);
-            saveData();
-            renderAdminData();
-        }
-
-        function renderAdminData() {
-            document.getElementById('statStudents').innerText = db.students.length;
-            document.getElementById('statFees').innerText = db.fees.filter(f => f.status === "Pending").length;
-
-            const sBody = document.getElementById('studentTableBody');
-            sBody.innerHTML = '';
-            db.students.forEach((s, i) => {
-                sBody.innerHTML += `<tr><td>${s.name}</td><td>${s.class}</td><td><button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteStudent(${i})">Delete</button></td></tr>`;
+            db.exams.push({
+                id: Date.now(),
+                studentReg: stData[0],
+                studentName: stData[1],
+                subject,
+                score,
+                grade: calculateGrade(score),
+                status: 'Pending Academic Review',
+                enteredBy: session.user
             });
-
-            const fBody = document.getElementById('feesTableBody');
-            fBody.innerHTML = '';
-            db.fees.forEach((f, i) => {
-                fBody.innerHTML += `<tr><td>${f.student}</td><td>${f.amount}</td><td style="color:${f.status.includes('Approved')?'#22c55e':'#eab308'}">${f.status}</td><td>${f.status === 'Pending' ? `<button class="btn btn-success" style="padding:4px 8px; font-size:11px;" onclick="approveFee(${i})">Approve</button>` : 'Done'}</td></tr>`;
-            });
+            logAudit(`Entered ${subject} marks (${score}%) for ${stData[1]}`);
+            buildMenu();
+            renderModule('exams');
         }
 
-        // --- TEACHER FUNCTIONS ---
-        function saveExamRecord() {
-            const student = document.getElementById('examStudent').value;
-            const details = document.getElementById('examDetails').value;
-            if(!student || !details) { alert("Fill all fields"); return; }
-
-            db.exams.push({student, details});
-            saveData();
-            renderTeacherData();
-            document.getElementById('examStudent').value = '';
-            document.getElementById('examDetails').value = '';
+        function verifyExam(index, newStatus) {
+            db.exams[index].status = newStatus;
+            logAudit(`Updated exam status for ${db.exams[index].studentName} (${db.exams[index].subject}) to: ${newStatus}`);
+            buildMenu();
+            renderModule('exams');
         }
 
-        function renderTeacherData() {
-            const eBody = document.getElementById('examTableBody');
-            eBody.innerHTML = '';
-            db.exams.forEach(e => {
-                eBody.innerHTML += `<tr><td>${e.student}</td><td>${e.details}</td></tr>`;
-            });
+        function recordPayment() {
+            const regNo = document.getElementById('payStudent').value;
+            const amount = parseInt(document.getElementById('payAmount').value);
+            const method = document.getElementById('payMethod').value;
+            if (!amount || amount <= 0) { alert('Enter valid payment amount.'); return; }
+
+            const student = db.students.find(s => s.regNo === regNo);
+            student.feePaid += amount;
+            const receipt = `RCP-${Math.floor(1000 + Math.random() * 9000)}`;
+            const date = new Date().toISOString().slice(0, 10);
+
+            db.payments.unshift({ receipt, studentReg: regNo, studentName: student.name, amount, method, date });
+            logAudit(`Recorded fee payment of ${amount.toLocaleString()} TZS for ${student.name} (${receipt})`);
+            renderModule('finance');
         }
 
-        // --- STUDENT FUNCTIONS ---
-        function renderStudentData() {
-            const rBody = document.getElementById('studentResultsBody');
-            rBody.innerHTML = '';
-            db.exams.forEach(e => {
-                rBody.innerHTML += `<tr><td><strong>${e.student}:</strong> ${e.details}</td></tr>`;
-            });
+        function recordExpense() {
+            const title = document.getElementById('expTitle').value.trim();
+            const amount = parseInt(document.getElementById('expAmount').value);
+            if (!title || !amount) return;
+
+            db.expenses.unshift({ id: Date.now(), title, amount, recordedBy: session.user, status: 'Pending Approval' });
+            logAudit(`Submitted expense "${title}" (${amount.toLocaleString()} TZS) for approval`);
+            buildMenu();
+            renderModule('finance');
+        }
+
+        function approveExpense(index) {
+            db.expenses[index].status = 'Approved';
+            logAudit(`Approved expense: ${db.expenses[index].title}`);
+            buildMenu();
+            renderModule('finance');
+        }
+
+        function markAttendance() {
+            const target = document.getElementById('attTarget').value.trim();
+            const status = document.getElementById('attStatus').value;
+            if (!target) return;
+            const date = new Date().toISOString().slice(0, 10);
+            db.attendance.unshift({ date, target, status });
+            logAudit(`Marked attendance for ${target}: ${status}`);
+            renderModule('attendance');
+        }
+
+        function requestLeave() {
+            const staffName = document.getElementById('lvName').value.trim();
+            const reason = document.getElementById('lvReason').value.trim();
+            if (!staffName || !reason) return;
+            db.leaves.unshift({ id: Date.now(), staffName, reason, status: 'Pending' });
+            logAudit(`Submitted leave request for ${staffName}`);
+            buildMenu();
+            renderModule('hr');
+        }
+
+        function approveLeave(index) {
+            db.leaves[index].status = 'Approved';
+            logAudit(`Approved leave request for ${db.leaves[index].staffName}`);
+            buildMenu();
+            renderModule('hr');
+        }
+
+        function issueBook() {
+            const book = document.getElementById('libBook').value.trim();
+            const borrower = document.getElementById('libUser').value.trim();
+            if (!book || !borrower) return;
+            db.library.unshift({ book, borrower, status: 'Borrowed' });
+            logAudit(`Issued library book "${book}" to ${borrower}`);
+            renderModule('operations');
         }
     </script>
 </body>
