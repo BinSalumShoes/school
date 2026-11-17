@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIPER MODERN SCHOOL PORTAL</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            height: 92vh;
+            background: #1e293b;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        header {
+            background: #0f172a;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+        .school-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #38bdf8;
+            letter-spacing: 1px;
+        }
+        .content {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+        .btn {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover { background: #0ea5e9; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-success { background: #22c55e; color: #fff; }
+
+        /* Forms & Inputs */
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 16px 0;
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: #fff;
+            border-radius: 8px;
+            outline: none;
+        }
+        label { font-size: 13px; color: #94a3b8; font-weight: 600; }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+            font-size: 14px;
+        }
+        th { background: #0f172a; color: #38bdf8; }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+        }
+        .stat-card h3 { font-size: 24px; color: #38bdf8; margin-top: 5px; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="school-title">🎓 VIPER MODERN SCHOOL</div>
+            <div id="userHeaderInfo" class="hidden">
+                <span id="roleDisplay" style="color: #eab308; font-weight: bold; margin-right: 15px;"></span>
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="content" id="mainContent">
+            <!-- LOGIN SCREEN -->
+            <div id="loginScreen" style="max-width: 400px; margin: auto; padding-top: 40px;">
+                <h2 style="margin-bottom: 20px; color: #38bdf8;">Portal Login</h2>
+                <label>Select Role</label>
+                <select id="loginRole">
+                    <option value="admin">Administrator (Full Access)</option>
+                    <option value="teacher">Teacher / Staff (Data Entry)</option>
+                    <option value="student">Student / Parent (View Only)</option>
+                </select>
+
+                <label>Username</label>
+                <input type="text" id="loginUser" placeholder="Enter username...">
+
+                <label>Password</label>
+                <input type="password" id="loginPass" placeholder="Enter password...">
+
+                <button class="btn" style="width: 100%; margin-top: 10px;" onclick="login()">Login to Portal</button>
+            </div>
+
+            <!-- ADMIN DASHBOARD -->
+            <div id="adminDashboard" class="hidden">
+                <h2 style="margin-bottom: 15px; color: #eab308;">Admin Control Center</h2>
+                <div class="card-grid">
+                    <div class="stat-card">
+                        <label>Total Students</label>
+                        <h3 id="statStudents">0</h3>
+                    </div>
+                    <div class="stat-card">
+                        <label>Pending Fee Approvals</label>
+                        <h3 id="statFees">0</h3>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn" onclick="switchAdminTab('studentsTab')">Manage Students</button>
+                    <button class="btn" onclick="switchAdminTab('feesTab')">Fee Approvals</button>
+                </div>
+
+                <!-- Students Section -->
+                <div id="studentsTab">
+                    <h3 style="margin-bottom: 10px;">Register New Student</h3>
+                    <input type="text" id="studentName" placeholder="Full Name">
+                    <input type="text" id="studentClass" placeholder="Class (e.g. Form One)">
+                    <button class="btn btn-success" onclick="addStudent()">Save Student</button>
+
+                    <h3 style="margin-top: 25px; margin-bottom: 10px;">Enrolled Students List</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Class</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="studentTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Fees Section -->
+                <div id="feesTab" class="hidden">
+                    <h3 style="margin-bottom: 10px;">Fee Payment Approvals</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Student</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="feesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TEACHER DASHBOARD -->
+            <div id="teacherDashboard" class="hidden">
+                <h2 style="margin-bottom: 15px; color: #38bdf8;">Teacher Portal - Data Entry</h2>
+                <p style="color: #94a3b8; margin-bottom: 15px;">You can record student exam scores and save them.</p>
+                
+                <label>Student Name</label>
+                <input type="text" id="examStudent" placeholder="Student Name">
+                <label>Subject & Score</label>
+                <input type="text" id="examDetails" placeholder="Subject and Marks (e.g. Mathematics - 85%)">
+                <button class="btn btn-success" onclick="saveExamRecord()">Save Record</button>
+
+                <h3 style="margin-top: 25px; margin-bottom: 10px;">Recorded Results</h3>
+                <table>
+                    <thead><tr><th>Student</th><th>Details</th></tr></thead>
+                    <tbody id="examTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- STUDENT DASHBOARD -->
+            <div id="studentDashboard" class="hidden">
+                <h2 style="margin-bottom: 15px; color: #38bdf8;">Student Portal</h2>
+                <p style="color: #94a3b8; margin-bottom: 15px;">Welcome! Here is your academic overview.</p>
+                
+                <div class="stat-card" style="margin-bottom: 20px;">
+                    <label>Fee Status</label>
+                    <h3 id="myFeeStatus" style="color: #22c55e;">Verified / Clear</h3>
+                </div>
+
+                <h3>My Exam Results</h3>
+                <table>
+                    <thead><tr><th>Subject & Score</th></tr></thead>
+                    <tbody id="studentResultsBody"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // LocalStorage Data Setup
+        let db = JSON.parse(localStorage.getItem('viper_school_db')) || {
+            students: [{name: "Asha Salum", class: "Form 1"}],
+            fees: [{student: "Asha Salum", amount: "150,000 TZS", status: "Pending"}],
+            exams: [{student: "Asha Salum", details: "Mathematics - 88%"}]
+        };
+
+        let currentUser = null;
+
+        function saveData() {
+            localStorage.setItem('viper_school_db', JSON.stringify(db));
+        }
+
+        function login() {
+            const role = document.getElementById('loginRole').value;
+            const user = document.getElementById('loginUser').value;
+            if(!user) { alert("Please enter username"); return; }
+
+            currentUser = { role, user };
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('userHeaderInfo').classList.remove('hidden');
+            document.getElementById('roleDisplay').innerText = `Role: ${role.toUpperCase()} (${user})`;
+
+            if(role === 'admin') {
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                renderAdminData();
+            } else if(role === 'teacher') {
+                document.getElementById('teacherDashboard').classList.remove('hidden');
+                renderTeacherData();
+            } else if(role === 'student') {
+                document.getElementById('studentDashboard').classList.remove('hidden');
+                renderStudentData();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('userHeaderInfo').classList.add('hidden');
+            document.querySelectorAll('.content > div').forEach(d => d.classList.add('hidden'));
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        // --- ADMIN FUNCTIONS ---
+        function switchAdminTab(tabId) {
+            document.getElementById('studentsTab').classList.add('hidden');
+            document.getElementById('feesTab').classList.add('hidden');
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+        function addStudent() {
+            const name = document.getElementById('studentName').value;
+            const cls = document.getElementById('studentClass').value;
+            if(!name || !cls) { alert("Fill all fields"); return; }
+
+            db.students.push({name, class: cls});
+            db.fees.push({student: name, amount: "200,000 TZS", status: "Pending"});
+            saveData();
+            renderAdminData();
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentClass').value = '';
+        }
+
+        function approveFee(index) {
+            db.fees[index].status = "Approved ✅";
+            saveData();
+            renderAdminData();
+        }
+
+        function deleteStudent(index) {
+            db.students.splice(index, 1);
+            saveData();
+            renderAdminData();
+        }
+
+        function renderAdminData() {
+            document.getElementById('statStudents').innerText = db.students.length;
+            document.getElementById('statFees').innerText = db.fees.filter(f => f.status === "Pending").length;
+
+            const sBody = document.getElementById('studentTableBody');
+            sBody.innerHTML = '';
+            db.students.forEach((s, i) => {
+                sBody.innerHTML += `<tr><td>${s.name}</td><td>${s.class}</td><td><button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteStudent(${i})">Delete</button></td></tr>`;
+            });
+
+            const fBody = document.getElementById('feesTableBody');
+            fBody.innerHTML = '';
+            db.fees.forEach((f, i) => {
+                fBody.innerHTML += `<tr><td>${f.student}</td><td>${f.amount}</td><td style="color:${f.status.includes('Approved')?'#22c55e':'#eab308'}">${f.status}</td><td>${f.status === 'Pending' ? `<button class="btn btn-success" style="padding:4px 8px; font-size:11px;" onclick="approveFee(${i})">Approve</button>` : 'Done'}</td></tr>`;
+            });
+        }
+
+        // --- TEACHER FUNCTIONS ---
+        function saveExamRecord() {
+            const student = document.getElementById('examStudent').value;
+            const details = document.getElementById('examDetails').value;
+            if(!student || !details) { alert("Fill all fields"); return; }
+
+            db.exams.push({student, details});
+            saveData();
+            renderTeacherData();
+            document.getElementById('examStudent').value = '';
+            document.getElementById('examDetails').value = '';
+        }
+
+        function renderTeacherData() {
+            const eBody = document.getElementById('examTableBody');
+            eBody.innerHTML = '';
+            db.exams.forEach(e => {
+                eBody.innerHTML += `<tr><td>${e.student}</td><td>${e.details}</td></tr>`;
+            });
+        }
+
+        // --- STUDENT FUNCTIONS ---
+        function renderStudentData() {
+            const rBody = document.getElementById('studentResultsBody');
+            rBody.innerHTML = '';
+            db.exams.forEach(e => {
+                rBody.innerHTML += `<tr><td><strong>${e.student}:</strong> ${e.details}</td></tr>`;
+            });
+        }
+    </script>
+</body>
+</html>
