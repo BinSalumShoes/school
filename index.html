@@ -49,18 +49,33 @@
             width: 100%;
             max-width: 440px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-        }
-        .login-box h1 {
-            font-size: 20px;
-            color: #1e3a8a;
             text-align: center;
-            margin-bottom: 6px;
+        }
+        .login-logo {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 15px auto;
+            border-radius: 50%;
+            background: #1e3a8a;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 20px;
+            border: 3px solid #3b82f6;
+            overflow: hidden;
+        }
+        .login-logo img { width: 100%; height: 100%; object-fit: cover; }
+        .login-box h1 {
+            font-size: 18px;
+            color: #1e3a8a;
+            margin-bottom: 4px;
         }
         .login-box p.subtitle {
             font-size: 12px;
             color: var(--text-muted);
-            text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         /* --- MAIN APP LAYOUT --- */
@@ -79,20 +94,17 @@
             color: #ffffff;
         }
         .brand {
-            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
             font-weight: 800;
             color: #ffffff;
-            padding: 0 10px 18px 10px;
+            padding: 0 5px 18px 5px;
             border-bottom: 1px solid rgba(255,255,255,0.2);
             margin-bottom: 15px;
         }
-        .brand span {
-            display: block;
-            font-size: 10px;
-            color: var(--accent);
-            font-weight: 600;
-            margin-top: 3px;
-        }
+        .brand img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
         .nav-list {
             flex: 1;
             overflow-y: auto;
@@ -154,7 +166,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -166,12 +178,12 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .stat-card .label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
             text-transform: uppercase;
         }
         .stat-card .value {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
             margin-top: 6px;
             color: var(--primary);
@@ -188,6 +200,9 @@
             font-size: 16px;
             margin-bottom: 14px;
             color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .form-grid {
             display: grid;
@@ -260,13 +275,33 @@
         .st-approved { background: #dcfce7; color: #16a34a; }
         .st-locked { background: #fee2e2; color: #dc2626; }
         .hidden { display: none !important; }
+
+        /* --- PRINT STYLING (AGEC LOGO & HEADER) --- */
+        @media print {
+            body * { visibility: hidden; }
+            #printableArea, #printableArea * { visibility: visible; }
+            #printableArea { position: absolute; left: 0; top: 0; width: 100%; background: #fff; padding: 20px; }
+            .no-print { display: none !important; }
+        }
+        .print-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        .print-header img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
     </style>
 </head>
 <body>
 
-    <!-- 1. SECURE LOGIN SCREEN (PRESS ENTER SUPPORT) -->
+    <!-- 1. SECURE LOGIN SCREEN -->
     <div id="loginScreen">
         <div class="login-box" onkeydown="checkLoginEnter(event)">
+            <div class="login-logo">
+                <img src="logo.png" alt="AGEC" onerror="this.style.display='none'; this.parentElement.innerText='AGEC';">
+            </div>
             <h1>ABIDHAR AL-GHAFAR</h1>
             <p class="subtitle">English Centre (AGEC) Portal</p>
 
@@ -285,7 +320,7 @@
 
             <button class="btn" style="width: 100%; margin-top: 8px;" onclick="handleLogin()">Login to System</button>
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px; text-align: center;">
-                💡 Tip: You can press <b>Enter</b> on your keyboard to login.
+                💡 Press <b>Enter</b> to login. (Auto-logout after 1 hour of inactivity)
             </p>
         </div>
     </div>
@@ -294,8 +329,11 @@
     <div id="appLayout">
         <aside class="sidebar">
             <div class="brand">
-                Abidhar Al-ghafar (AGEC)
-                <span id="sidebarRoleLabel">PORTAL</span>
+                <img src="logo.png" alt="AGEC" onerror="this.style.display='none';">
+                <div>
+                    AGEC Portal
+                    <span id="sidebarRoleLabel" style="display:block; font-size:10px; color:var(--accent);">ONLINE</span>
+                </div>
             </div>
             <div class="nav-list" id="navMenu"></div>
         </aside>
@@ -315,7 +353,7 @@
     </div>
 
     <script>
-        // --- SYSTEM USERS DATABASE ---
+        // --- SYSTEM DATABASE ---
         let systemUsers = JSON.parse(localStorage.getItem('agec_smis_users')) || {
             SUPER_ADMIN: [{ username: 'admin', password: 'admin123', name: 'Suleiman Salum', locked: false }],
             TEACHER: [
@@ -334,12 +372,16 @@
             exams: [
                 { studentReg: 'AGEC-2026-001', studentName: 'Asha Salum Ali', subject: 'Advanced Grammar', score: 88, grade: 'A', status: 'Published' }
             ],
+            payments: [
+                { id: 1, regNo: 'AGEC-2026-001', studentName: 'Asha Salum Ali', amount: 200000, date: '2026-11-01', method: 'Cash' }
+            ],
             auditLogs: [
                 { time: '2026-11-17 08:00', user: 'System', role: 'SUPER_ADMIN', action: 'AGEC Portal Initialized' }
             ]
         };
 
         let session = { user: '', role: '', fullName: '' };
+        let idleTimer = null;
 
         function saveSystem() {
             localStorage.setItem('agec_smis_users', JSON.stringify(systemUsers));
@@ -352,41 +394,35 @@
             saveSystem();
         }
 
-        // --- ENTER KEY SUPPORT FOR LOGIN ---
-        function checkLoginEnter(event) {
-            if (event.key === 'Enter') {
-                handleLogin();
-            }
+        // --- AUTO LOGOUT AFTER 1 HOUR ---
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            // 1 hour = 3600000 milliseconds
+            idleTimer = setTimeout(() => {
+                alert('Session expired due to 1 hour of inactivity. Logging out automatically.');
+                handleLogout();
+            }, 3600000);
         }
 
-        // --- ENTER KEY SUPPORT FOR DYNAMIC FORMS ---
-        function checkFormEnter(event, callbackName) {
-            if (event.key === 'Enter') {
-                window[callbackName]();
-            }
-        }
+        window.onload = () => {
+            ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => {
+                window.addEventListener(evt, resetIdleTimer);
+            });
+        };
+
+        function checkLoginEnter(e) { if (e.key === 'Enter') handleLogin(); }
+        function checkFormEnter(e, cb) { if (e.key === 'Enter') window[cb](); }
 
         function handleLogin() {
             const role = document.getElementById('loginRole').value;
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
 
-            if (!username || !password) {
-                alert('Please enter both Username and Password.');
-                return;
-            }
+            if (!username || !password) { alert('Please enter username and password.'); return; }
 
             const userRecord = systemUsers[role]?.find(u => u.username === username && u.password === password);
-
-            if (!userRecord) {
-                alert('Access Denied: Invalid credentials or account does not exist!');
-                return;
-            }
-
-            if (userRecord.locked) {
-                alert('Account Locked: Your account has been locked by the Administrator. Contact support.');
-                return;
-            }
+            if (!userRecord) { alert('Invalid credentials!'); return; }
+            if (userRecord.locked) { alert('Account is locked by Admin.'); return; }
 
             session = { user: username, role: role, fullName: userRecord.name };
             document.getElementById('loginScreen').style.display = 'none';
@@ -395,12 +431,14 @@
             document.getElementById('loggedUserDisplay').innerText = userRecord.name;
             document.getElementById('loggedRoleBadge').innerText = role.replace('_', ' ');
 
-            logAudit(`Logged into ${role} portal`);
+            logAudit(`Logged into ${role}`);
+            resetIdleTimer();
             buildMenu();
         }
 
         function handleLogout() {
-            logAudit(`Logged out of system`);
+            clearTimeout(idleTimer);
+            logAudit(`Logged out`);
             document.getElementById('appLayout').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('loginUsername').value = '';
@@ -410,14 +448,15 @@
         function buildMenu() {
             const nav = document.getElementById('navMenu');
             nav.innerHTML = '';
-
             let modules = [];
+
             if (session.role === 'SUPER_ADMIN') {
                 modules = [
                     { key: 'dashboard', label: '📊 Dashboard' },
-                    { key: 'manage_users', label: '⚙️ Manage Users & Passwords' },
                     { key: 'students', label: '👨‍🎓 Student Management' },
                     { key: 'exams', label: '📝 Exams & Results' },
+                    { key: 'finance', label: '💰 Finance Portal' },
+                    { key: 'manage_users', label: '⚙️ Manage Users & Security' },
                     { key: 'audit', label: '🛡️ Audit Logs' }
                 ];
             } else if (session.role === 'TEACHER') {
@@ -427,7 +466,7 @@
                 ];
             } else if (session.role === 'STUDENT') {
                 modules = [
-                    { key: 'student_portal', label: '🎓 My Academic & Fees Portal' }
+                    { key: 'student_portal', label: '🎓 My Academic & Fees' }
                 ];
             }
 
@@ -452,33 +491,86 @@
             if (mod === 'dashboard') {
                 document.getElementById('activeModuleTitle').innerText = 'Admin Dashboard - AGEC';
                 ws.innerHTML = `
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="label">Registered Students</div><div class="value">${db.students.length}</div></div>
-                        <div class="stat-card"><div class="label">Active Teachers</div><div class="value">${systemUsers.TEACHER.length}</div></div>
+                    <div id="printableArea">
+                        <div class="print-header no-print"></div>
+                        <div class="stats-grid">
+                            <div class="stat-card"><div class="label">Total Students</div><div class="value">${db.students.length}</div></div>
+                            <div class="stat-card"><div class="label">Active Teachers</div><div class="value">${systemUsers.TEACHER.length}</div></div>
+                            <div class="stat-card"><div class="label">Total Collected Fee</div><div class="value" style="color:var(--success);">${db.payments.reduce((a,c)=>a+c.amount,0).toLocaleString()} TZS</div></div>
+                        </div>
+                        <div class="card">
+                            <h3>Welcome to Abidhar Al-ghafar English Centre (AGEC)</h3>
+                            <p style="color:var(--text-muted); font-size:13px;">Manage students, record fee payments, and generate official AGEC reports securely.</p>
+                        </div>
                     </div>
-                    <div class="card">
-                        <h3>Welcome to Abidhar Al-ghafar English Centre (AGEC), ${session.fullName}</h3>
-                        <p style="color:var(--text-muted); font-size:13px;">Manage user passwords, lock/unlock accounts, and track student fee balances securely.</p>
-                    </div>
+                    <button class="btn btn-warning no-print" onclick="printReport('Admin Dashboard Report')">🖨️ Print Report</button>
                 `;
-            } else if (mod === 'manage_users') {
-                document.getElementById('activeModuleTitle').innerText = 'Manage Users, Passwords & Lock Status';
+            } else if (mod === 'students') {
+                document.getElementById('activeModuleTitle').innerText = 'Student Management';
+                ws.innerHTML = `
+                    <div id="printableArea">
+                        <div class="card">
+                            <h3>
+                                <span>👨‍🎓 Student Management Directory</span>
+                                <input type="text" id="studentSearch" placeholder="Search student by name or reg..." onkeyup="filterStudents()" style="width:220px; margin:0; padding:6px; font-size:12px;" class="no-print">
+                            </h3>
+                            <table>
+                               <thead><tr><th>Reg No</th><th>Full Name</th><th>Class</th><th>Guardian</th><th>Status</th></tr></thead>
+                               <tbody id="studentTableBody">
+                                   ${db.students.map(s => `<tr><td><strong>${s.regNo}</strong></td><td>${s.name}</td><td>${s.class}</td><td>${s.guardian}</td><td><span class="status-pill st-approved">${s.status}</span></td></tr>`).join('')}
+                               </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <button class="btn btn-warning no-print" onclick="printReport('Student Management Report')">🖨️ Print Report</button>
+                `;
+            } else if (mod === 'exams') {
+                document.getElementById('activeModuleTitle').innerText = 'Exams & Results';
+                ws.innerHTML = `
+                    <div id="printableArea">
+                        <div class="card">
+                            <h3>📝 Official Examination Records</h3>
+                            <table>
+                               <thead><tr><th>Reg No</th><th>Student Name</th><th>Subject</th><th>Score</th><th>Grade</th><th>Status</th></tr></thead>
+                               <tbody>
+                                   ${db.exams.map(e => `<tr><td>${e.studentReg}</td><td>${e.studentName}</td><td>${e.subject}</td><td><strong>${e.score}%</strong></td><td>${e.grade}</td><td><span class="status-pill st-approved">${e.status}</span></td></tr>`).join('')}
+                               </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <button class="btn btn-warning no-print" onclick="printReport('Examination Results Report')">🖨️ Print Report</button>
+                `;
+            } else if (mod === 'finance') {
+                document.getElementById('activeModuleTitle').innerText = 'Finance Portal - Record Payments';
                 ws.innerHTML = `
                     <div class="card">
-                        <h3>➕ Create User Credentials</h3>
-                        <div class="form-grid" onkeydown="checkFormEnter(event, 'createNewUserCredential')">
-                            <div><label>Role</label><select id="newRole"><option value="TEACHER">Teacher</option><option value="STUDENT">Student</option></select></div>
-                            <div><label>Full Name</label><input type="text" id="newName" placeholder="e.g. Ali Juma"></div>
-                            <div><label>Username / Reg No</label><input type="text" id="newUsername" placeholder="e.g. AGEC-2026-002"></div>
-                            <div><label>Password</label><input type="text" id="newPassword" placeholder="Password"></div>
+                        <h3>💰 Record Student Fee Payment</h3>
+                        <div class="form-grid">
+                            <div><label>Student</label><select id="payReg">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select></div>
+                            <div><label>Amount (TZS)</label><input type="number" id="payAmount" placeholder="50000"></div>
+                            <div><label>Payment Method</label><select id="payMethod"><option>Cash</option><option>Bank / Control Number</option><option>Mobile Money</option></select></div>
                         </div>
-                        <button class="btn btn-success" onclick="createNewUserCredential()">Generate Account</button>
+                        <button class="btn btn-success" onclick="recordPayment()">Record Payment</button>
                     </div>
 
-                    <div class="card">
-                        <h3>🔒 User Access Control (Lock/Unlock & Update Passwords)</h3>
+                    <div class="card" id="printableArea">
+                        <h3>📄 Payment History Logs</h3>
                         <table>
-                            <thead><tr><th>Role</th><th>Name</th><th>Username</th><th>Status</th><th>Update Password</th><th>Action</th></tr></thead>
+                            <thead><tr><th>ID</th><th>Reg No</th><th>Student Name</th><th>Amount (TZS)</th><th>Method</th><th>Date</th></tr></thead>
+                            <tbody>
+                                ${db.payments.map(p => `<tr><td>#${p.id}</td><td>${p.regNo}</td><td>${p.studentName}</td><td style="color:var(--success);"><strong>${p.amount.toLocaleString()}</strong></td><td>${p.method}</td><td>${p.date}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-warning no-print" onclick="printReport('Finance & Payments Report')">🖨️ Print Report</button>
+                `;
+            } else if (mod === 'manage_users') {
+                document.getElementById('activeModuleTitle').innerText = 'Manage Users & Security';
+                ws.innerHTML = `
+                    <div class="card">
+                        <h3>🔒 User Access Control & Password Reset</h3>
+                        <table>
+                            <thead><tr><th>Role</th><th>Name</th><th>Username</th><th>Status</th><th>New Password</th><th>Action</th></tr></thead>
                             <tbody>
                                 ${Object.entries(systemUsers).flatMap(([role, list]) => list.map((u, i) => `
                                     <tr>
@@ -486,17 +578,8 @@
                                         <td>${u.name}</td>
                                         <td><strong>${u.username}</strong></td>
                                         <td><span class="status-pill ${u.locked ? 'st-locked' : 'st-approved'}">${u.locked ? 'Locked' : 'Active'}</span></td>
-                                        <td>
-                                            <input type="text" id="p_${role}_${i}" placeholder="New pass" style="width:110px; display:inline-block; margin:0; padding:5px; font-size:11px;">
-                                            <button class="btn btn-sm btn-warning" onclick="updateUserPassword('${role}', ${i})">Change</button>
-                                        </td>
-                                        <td>
-                                            ${u.username === 'admin' ? 'Protected' : `
-                                                <button class="btn btn-sm ${u.locked ? 'btn-success' : 'btn-danger'}" onclick="toggleLockUser('${role}', ${i})">
-                                                    ${u.locked ? 'Unlock' : 'Lock'}
-                                                </button>
-                                            `}
-                                        </td>
+                                        <td><input type="text" id="p_${role}_${i}" placeholder="New pass" style="width:100px; padding:4px;"> <button class="btn btn-sm btn-warning" onclick="updatePass('${role}', ${i})">Save</button></td>
+                                        <td>${u.username==='admin'?'Protected':`<button class="btn btn-sm ${u.locked?'btn-success':'btn-danger'}" onclick="toggleLock('${role}', ${i})">${u.locked?'Unlock':'Lock'}</button>`}</td>
                                     </tr>
                                 `)).join('')}
                             </tbody>
@@ -504,130 +587,130 @@
                     </div>
                 `;
             } else if (mod === 'teacher_dashboard') {
-                document.getElementById('activeModuleTitle').innerText = 'Teacher Portal Overview';
-                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">AGEC Teacher Dashboard. Use the menu to submit student scores.</p></div>`;
+                document.getElementById('activeModuleTitle').innerText = 'Teacher Portal';
+                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">Use the left menu to submit student scores and print reports.</p></div>`;
             } else if (mod === 'enter_marks') {
                 document.getElementById('activeModuleTitle').innerText = 'Enter Student Marks';
                 ws.innerHTML = `
                     <div class="card">
                         <h3>✍️ Submit Exam Marks</h3>
-                        <div onkeydown="checkFormEnter(event, 'teacherSubmitMarks')">
-                            <label>Student</label>
-                            <select id="mStudent">${db.students.map(s => `<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select>
-                            <label>Subject</label><input type="text" id="mSubject" placeholder="Subject Name">
-                            <label>Marks (0-100)</label><input type="number" id="mScore" placeholder="85">
-                        </div>
+                        <label>Student</label><select id="mStudent">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select>
+                        <label>Subject</label><input type="text" id="mSubject" placeholder="Subject Name">
+                        <label>Marks (0-100)</label><input type="number" id="mScore" placeholder="85">
                         <button class="btn" onclick="teacherSubmitMarks()">Submit Marks</button>
                     </div>
                 `;
             } else if (mod === 'student_portal') {
-                document.getElementById('activeModuleTitle').innerText = 'Student Financial & Academic Portal';
-                const studentData = db.students.find(s => s.regNo === session.user) || db.students[0];
-                const notPaid = studentData.feeTotal - studentData.feePaid;
+                document.getElementById('activeModuleTitle').innerText = 'Student Portal';
+                const st = db.students.find(s => s.regNo === session.user) || db.students[0];
+                const notPaid = st.feeTotal - st.feePaid;
                 ws.innerHTML = `
-                    <div class="card">
-                        <h3>🎓 Welcome, ${session.fullName} (Reg: ${studentData.regNo})</h3>
-                        <p style="color:var(--text-muted);">Class: <strong>${studentData.class}</strong></p>
+                    <div id="printableArea">
+                        <div class="card">
+                            <h3>🎓 Academic & Fee Summary: ${session.fullName}</h3>
+                            <p style="color:var(--text-muted);">Reg No: <strong>${st.regNo}</strong> | Class: <strong>${st.class}</strong></p>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card"><div class="label">Amount (Total Fee)</div><div class="value">${st.feeTotal.toLocaleString()} TZS</div></div>
+                            <div class="stat-card"><div class="label">Amount Paid</div><div class="value" style="color:var(--success);">${st.feePaid.toLocaleString()} TZS</div></div>
+                            <div class="stat-card"><div class="label">Not Paid (Remaining)</div><div class="value" style="color:var(--danger);">${notPaid.toLocaleString()} TZS</div></div>
+                            <div class="stat-card"><div class="label">Balance</div><div class="value">${notPaid > 0 ? '-' + notPaid.toLocaleString() : '0'} TZS</div></div>
+                        </div>
+                        <div class="card">
+                            <h3>📄 My Exam Results</h3>
+                            <table>
+                                <thead><tr><th>Subject</th><th>Marks</th><th>Grade</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    ${db.exams.filter(e => e.studentReg === st.regNo).map(e => `<tr><td>${e.subject}</td><td>${e.score}%</td><td><strong>${e.grade}</strong></td><td>Official</td></tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="label">Total Fee (Amount)</div><div class="value">${studentData.feeTotal.toLocaleString()} TZS</div></div>
-                        <div class="stat-card"><div class="label">Amount Paid</div><div class="value" style="color:var(--success);">${studentData.feePaid.toLocaleString()} TZS</div></div>
-                        <div class="stat-card"><div class="label">Not Paid (Remaining Fee)</div><div class="value" style="color:var(--danger);">${notPaid.toLocaleString()} TZS</div></div>
-                        <div class="stat-card"><div class="label">Account Balance</div><div class="value" style="color:${notPaid > 0 ? 'var(--danger)' : 'var(--success)'};">${notPaid > 0 ? '-' + notPaid.toLocaleString() : '0'} TZS</div></div>
-                    </div>
-
-                    <div class="card">
-                        <h3>📄 My Exam Results</h3>
-                        <table>
-                            <thead><tr><th>Subject</th><th>Marks</th><th>Grade</th><th>Status</th></tr></thead>
-                            <tbody>
-                                ${db.exams.filter(e => e.studentReg === studentData.regNo).map(e => `<tr><td>${e.subject}</td><td>${e.score}%</td><td><strong>${e.grade}</strong></td><td>Official</td></tr>`).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    <button class="btn btn-warning no-print" onclick="printReport('Student Academic Report')">🖨️ Print Report</button>
                 `;
             } else if (mod === 'audit') {
-                document.getElementById('activeModuleTitle').innerText = 'System Audit Trail';
+                document.getElementById('activeModuleTitle').innerText = 'Audit Logs';
                 ws.innerHTML = `
                     <div class="card">
-                        <h3>🛡️ Immutable Logs</h3>
+                        <h3>🛡️ System Activity Logs</h3>
                         <table>
                             <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th></tr></thead>
-                            <tbody>${db.auditLogs.map(l => `<tr><td>${l.time}</td><td>${l.user}</td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}</tbody>
+                            <tbody>${db.auditLogs.map(l=>`<tr><td>${l.time}</td><td>${l.user}</td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}</tbody>
                         </table>
                     </div>
                 `;
             }
         }
 
-        // --- ADMIN ACTIONS (LOCK/UNLOCK & UPDATE PASSWORDS) ---
-        function createNewUserCredential() {
-            const role = document.getElementById('newRole').value;
-            const name = document.getElementById('newName').value.trim();
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value.trim();
-
-            if (!name || !username || !password) {
-                alert('Please fill out all fields.');
-                return;
-            }
-
-            const exists = Object.values(systemUsers).flat().some(u => u.username === username);
-            if (exists) {
-                alert('Username already exists!');
-                return;
-            }
-
-            systemUsers[role].push({ username, password, name, locked: false });
-            
-            if (role === 'STUDENT') {
-                db.students.push({ regNo: username, name: name, class: 'English Level 1', guardian: 'Parent', status: 'Active', feeTotal: 300000, feePaid: 0 });
-            }
-
-            saveSystem();
-            logAudit(`Created credentials for ${role}: ${name} (${username})`);
-            alert(`Account successfully created for ${name}!`);
-            renderModule('manage_users');
+        // --- SEARCH FILTER FUNCTION ---
+        function filterStudents() {
+            const query = document.getElementById('studentSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#studentTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
         }
 
-        function toggleLockUser(role, index) {
-            const user = systemUsers[role][index];
-            user.locked = !user.locked;
-            saveSystem();
-            logAudit(`${user.locked ? 'Locked' : 'Unlocked'} user account: ${user.username}`);
-            renderModule('manage_users');
+        // --- PRINT REPORT FUNCTION (WITH AGEC LOGO HEADER) ---
+        function printReport(title) {
+            const area = document.getElementById('printableArea');
+            const headerDiv = area.querySelector('.print-header') || document.createElement('div');
+            headerDiv.className = 'print-header';
+            headerDiv.innerHTML = `
+                <img src="logo.png" alt="AGEC Logo" onerror="this.style.display='none'">
+                <div>
+                    <h2 style="color:#1e3a8a; font-size:18px;">ABIDHAR AL-GHAFAR ENGLISH CENTRE (AGEC)</h2>
+                    <p style="font-size:12px; color:#555;">Official Report: ${title} | Generated on: ${new Date().toLocaleDateString()}</p>
+                </div>
+            `;
+            if(!area.contains(headerDiv)) area.prepend(headerDiv);
+            window.print();
         }
 
-        function updateUserPassword(role, index) {
-            const newPassInput = document.getElementById(`p_${role}_${index}`);
-            const newPass = newPassInput.value.trim();
-            if (!newPass || newPass.length < 4) {
-                alert('Password must be at least 4 characters long.');
-                return;
-            }
+        // --- FINANCE PAYMENT RECORDING ---
+        function recordPayment() {
+            const data = document.getElementById('payReg').value.split('|');
+            const amount = parseInt(document.getElementById('payAmount').value);
+            const method = document.getElementById('payMethod').value;
+            if(!amount || amount <= 0) { alert('Enter valid amount.'); return; }
 
-            systemUsers[role][index].password = newPass;
+            const student = db.students.find(s => s.regNo === data[0]);
+            student.feePaid += amount;
+            db.payments.unshift({ id: db.payments.length + 1, regNo: data[0], studentName: data[1], amount, date: new Date().toISOString().slice(0,10), method });
             saveSystem();
-            logAudit(`Updated password for user: ${systemUsers[role][index].username}`);
-            alert('Password updated successfully!');
-            newPassInput.value = '';
-            renderModule('manage_users');
+            logAudit(`Recorded fee payment of ${amount} TZS for ${data[1]}`);
+            alert('Payment recorded successfully!');
+            renderModule('finance');
         }
 
         function teacherSubmitMarks() {
             const st = document.getElementById('mStudent').value.split('|');
             const subject = document.getElementById('mSubject').value.trim();
             const score = parseInt(document.getElementById('mScore').value);
-            if (!subject || isNaN(score)) { alert('Enter valid subject and score.'); return; }
-
+            if(!subject || isNaN(score)) { alert('Fill all fields correctly.'); return; }
             const grade = score >= 80 ? 'A' : (score >= 70 ? 'B' : (score >= 60 ? 'C' : 'D'));
             db.exams.push({ studentReg: st[0], studentName: st[1], subject, score, grade, status: 'Published' });
             saveSystem();
-            logAudit(`Teacher ${session.fullName} entered marks for ${st[1]}`);
+            logAudit(`Teacher submitted marks for ${st[1]}`);
             alert('Marks submitted successfully!');
             document.getElementById('mSubject').value = '';
             document.getElementById('mScore').value = '';
+        }
+
+        function toggleLock(role, index) {
+            systemUsers[role][index].locked = !systemUsers[role][index].locked;
+            saveSystem();
+            renderModule('manage_users');
+        }
+
+        function updatePass(role, index) {
+            const p = document.getElementById(`p_${role}_${index}`).value.trim();
+            if(!p) { alert('Enter new password'); return; }
+            systemUsers[role][index].password = p;
+            saveSystem();
+            alert('Password updated successfully!');
+            renderModule('manage_users');
         }
     </script>
 </body>
