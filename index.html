@@ -52,8 +52,8 @@
             text-align: center;
         }
         .login-logo {
-            width: 80px;
-            height: 80px;
+            width: 85px;
+            height: 85px;
             margin: 0 auto 15px auto;
             border-radius: 50%;
             background: #fff;
@@ -63,6 +63,8 @@
             border: 3px solid #3b82f6;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: 900;
+            color: #1e3a8a;
         }
         .login-logo img { width: 100%; height: 100%; object-fit: cover; }
         .login-box h1 {
@@ -102,7 +104,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.2);
             margin-bottom: 15px;
         }
-        .brand img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #fff; }
+        .brand img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #fff; }
         .nav-list {
             flex: 1;
             overflow-y: auto;
@@ -179,6 +181,7 @@
             font-size: 11px;
             color: var(--text-muted);
             text-transform: uppercase;
+            font-weight: 700;
         }
         .stat-card .value {
             font-size: 20px;
@@ -213,6 +216,7 @@
             color: var(--text-muted);
             margin-bottom: 5px;
             font-weight: 600;
+            text-align: left;
         }
         input, select, textarea {
             width: 100%;
@@ -298,7 +302,7 @@
     <div id="loginScreen">
         <div class="login-box" onkeydown="checkLoginEnter(event)">
             <div class="login-logo">
-                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD..." alt="AGEC Logo" onerror="this.onerror=null; this.src='AGEC.jpg';">
+                <img src="AGEC.jpg" alt="AGEC" onerror="this.style.display='none'; this.parentElement.innerText='AGEC';">
             </div>
             <h1>ABIDHAR AL-GHAFAR</h1>
             <p class="subtitle">English Centre (AGEC) Portal</p>
@@ -352,8 +356,8 @@
     </div>
 
     <script>
-        // --- SYSTEM USERS DATABASE ---
-        let systemUsers = JSON.parse(localStorage.getItem('agec_smis_users')) || {
+        // --- SAFE INITIALIZATION OF SYSTEM DATABASE ---
+        const DEFAULT_USERS = {
             SUPER_ADMIN: [{ username: 'admin', password: 'admin123', name: 'Suleiman Salum', locked: false }],
             FINANCE: [{ username: 'fin_officer', password: 'fin123', name: 'Finance Manager', locked: false }],
             TEACHER: [
@@ -365,7 +369,7 @@
             ]
         };
 
-        let db = JSON.parse(localStorage.getItem('agec_smis_db')) || {
+        const DEFAULT_DB = {
             students: [
                 { regNo: 'AGEC-2026-001', name: 'Asha Salum Ali', class: 'English Level 2', guardian: 'Salum Ali', status: 'Active', feeTotal: 300000, feePaid: 200000 }
             ],
@@ -380,6 +384,18 @@
             ]
         };
 
+        let systemUsers = JSON.parse(localStorage.getItem('agec_smis_users')) || DEFAULT_USERS;
+        if (!systemUsers.SUPER_ADMIN) systemUsers.SUPER_ADMIN = DEFAULT_USERS.SUPER_ADMIN;
+        if (!systemUsers.FINANCE) systemUsers.FINANCE = DEFAULT_USERS.FINANCE;
+        if (!systemUsers.TEACHER) systemUsers.TEACHER = DEFAULT_USERS.TEACHER;
+        if (!systemUsers.STUDENT) systemUsers.STUDENT = DEFAULT_USERS.STUDENT;
+
+        let db = JSON.parse(localStorage.getItem('agec_smis_db')) || DEFAULT_DB;
+        if (!db.students) db.students = DEFAULT_DB.students;
+        if (!db.exams) db.exams = DEFAULT_DB.exams;
+        if (!db.payments) db.payments = DEFAULT_DB.payments;
+        if (!db.auditLogs) db.auditLogs = DEFAULT_DB.auditLogs;
+
         let session = { user: '', role: '', fullName: '' };
         let idleTimer = null;
 
@@ -387,6 +403,7 @@
             localStorage.setItem('agec_smis_users', JSON.stringify(systemUsers));
             localStorage.setItem('agec_smis_db', JSON.stringify(db));
         }
+        saveSystem();
 
         function logAudit(action) {
             const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
@@ -419,8 +436,10 @@
 
             if (!username || !password) { alert('Please enter username and password.'); return; }
 
-            const userRecord = systemUsers[role]?.find(u => u.username === username && u.password === password);
-            if (!userRecord) { alert('Invalid credentials!'); return; }
+            const userList = systemUsers[role] || [];
+            const userRecord = userList.find(u => u.username === username && u.password === password);
+            
+            if (!userRecord) { alert('Invalid credentials! Check role, username, and password.'); return; }
             if (userRecord.locked) { alert('Account is locked by Admin.'); return; }
 
             session = { user: username, role: role, fullName: userRecord.name };
@@ -493,19 +512,32 @@
 
             if (mod === 'dashboard') {
                 document.getElementById('activeModuleTitle').innerText = 'Admin Dashboard - AGEC';
+                const totalCollected = (db.payments || []).reduce((a, c) => a + (Number(c.amount) || 0), 0);
+                const totalExpected = (db.students || []).reduce((a, c) => a + (Number(c.feeTotal) || 0), 0);
+                const pendingFees = totalExpected - totalCollected;
+
                 ws.innerHTML = `
                     <div id="printableArea">
                         <div class="stats-grid">
                             <div class="stat-card"><div class="label">Total Students</div><div class="value">${db.students.length}</div></div>
                             <div class="stat-card"><div class="label">Active Teachers</div><div class="value">${systemUsers.TEACHER.length}</div></div>
-                            <div class="stat-card"><div class="label">Total Collected Fee</div><div class="value" style="color:var(--success);">${db.payments.reduce((a,c)=>a+c.amount,0).toLocaleString()} TZS</div></div>
+                            <div class="stat-card"><div class="label">Finance Officers</div><div class="value">${systemUsers.FINANCE.length}</div></div>
+                            <div class="stat-card"><div class="label">Collected Fees</div><div class="value" style="color:var(--success);">${totalCollected.toLocaleString()} TZS</div></div>
+                            <div class="stat-card"><div class="label">Remaining Fees</div><div class="value" style="color:var(--danger);">${pendingFees.toLocaleString()} TZS</div></div>
                         </div>
+
                         <div class="card">
-                            <h3>Welcome to Abidhar Al-ghafar English Centre (AGEC)</h3>
-                            <p style="color:var(--text-muted); font-size:13px;">Manage users, monitor academics, and issue official AGEC reports securely.</p>
+                            <h3>Welcome to Abidhar Al-ghafar English Centre (AGEC), ${session.fullName}</h3>
+                            <p style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">Quick Summary of Recent Payments & Academic Activities:</p>
+                            <table>
+                                <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Recent Action</th></tr></thead>
+                                <tbody>
+                                    ${db.auditLogs.slice(0, 6).map(l => `<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <button class="btn btn-warning no-print" onclick="printReport('Admin Dashboard Report')">🖨️ Print Report</button>
+                    <button class="btn btn-warning no-print" onclick="printReport('Admin Dashboard Report')">🖨️ Print Dashboard Report</button>
                 `;
             } else if (mod === 'students') {
                 document.getElementById('activeModuleTitle').innerText = 'Student Management';
@@ -514,12 +546,23 @@
                         <div class="card">
                             <h3>
                                 <span>👨‍🎓 Student Management Directory</span>
-                                <input type="text" id="studentSearch" placeholder="Search student..." onkeyup="filterStudents()" style="width:200px; margin:0; padding:5px; font-size:12px;" class="no-print">
+                                <input type="text" id="studentSearch" placeholder="Search by name or reg..." onkeyup="filterStudents()" style="width:220px; margin:0; padding:6px; font-size:12px;" class="no-print">
                             </h3>
                             <table>
-                               <thead><tr><th>Reg No</th><th>Full Name</th><th>Class</th><th>Guardian</th><th>Status</th></tr></thead>
+                               <thead><tr><th>Reg No</th><th>Full Name</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Remaining</th><th>Status</th></tr></thead>
                                <tbody id="studentTableBody">
-                                   ${db.students.map(s => `<tr><td><strong>${s.regNo}</strong></td><td>${s.name}</td><td>${s.class}</td><td>${s.guardian}</td><td><span class="status-pill st-approved">${s.status}</span></td></tr>`).join('')}
+                                   ${db.students.map(s => {
+                                       const rem = (s.feeTotal || 0) - (s.feePaid || 0);
+                                       return `<tr>
+                                           <td><strong>${s.regNo}</strong></td>
+                                           <td>${s.name}</td>
+                                           <td>${s.class}</td>
+                                           <td>${(s.feeTotal||0).toLocaleString()}</td>
+                                           <td style="color:var(--success);">${(s.feePaid||0).toLocaleString()}</td>
+                                           <td style="color:var(--danger);">${rem.toLocaleString()}</td>
+                                           <td><span class="status-pill st-approved">${s.status}</span></td>
+                                       </tr>`;
+                                   }).join('')}
                                </tbody>
                             </table>
                         </div>
@@ -547,11 +590,11 @@
                 ws.innerHTML = `
                     <div class="card no-print">
                         <h3>💰 Record Payment & Issue Receipt</h3>
-                        <div class="form-grid">
+                        <div class="form-grid" onkeydown="checkFormEnter(event, 'recordPayment')">
                             <div><label>Student</label><select id="payReg">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select></div>
                             <div><label>Amount (TZS)</label><input type="number" id="payAmount" placeholder="50000"></div>
                             <div><label>Payment Method</label><select id="payMethod"><option>Cash</option><option>Bank / Control Number</option><option>Mobile Money</option></select></div>
-                            <div><label>Attach Receipt / Document</label><input type="file" id="payAttach"></div>
+                            <div><label>Attach Receipt / Proof</label><input type="file" id="payAttach"></div>
                         </div>
                         <button class="btn btn-success" onclick="recordPayment()">Record & Issue Receipt</button>
                     </div>
@@ -560,42 +603,66 @@
                         <div class="card">
                             <h3>📄 Issued Payment Receipts & Attachments</h3>
                             <table>
-                               <thead><tr><th>Receipt No</th><th>Reg No</th><th>Student Name</th><th>Amount</th><th>Method</th><th>Attachment</th></tr></thead>
+                               <thead><tr><th>Receipt No</th><th>Reg No</th><th>Student Name</th><th>Amount</th><th>Method</th><th>Date</th><th>Attachment</th></tr></thead>
                                <tbody>
-                                   ${db.payments.map(p => `<tr><td><strong>#RCP-${p.id}</strong></td><td>${p.regNo}</td><td>${p.studentName}</td><td style="color:var(--success);">${p.amount.toLocaleString()} TZS</td><td>${p.method}</td><td>${p.attachment || 'None'}</td></tr>`).join('')}
+                                   ${db.payments.map(p => `<tr>
+                                       <td><strong>#RCP-${p.id}</strong></td>
+                                       <td>${p.regNo}</td>
+                                       <td>${p.studentName}</td>
+                                       <td style="color:var(--success);"><strong>${Number(p.amount).toLocaleString()} TZS</strong></td>
+                                       <td>${p.method}</td>
+                                       <td>${p.date}</td>
+                                       <td>${p.attachment || 'None'}</td>
+                                   </tr>`).join('')}
                                </tbody>
                             </table>
                         </div>
                     </div>
-                    <button class="btn btn-warning no-print" onclick="printReport('Finance & Receipts Report')">🖨️ Print Report</button>
+                    <button class="btn btn-warning no-print" onclick="printReport('Finance & Receipts Report')">🖨️ Print Finance Report</button>
                 `;
             } else if (mod === 'manage_users') {
                 document.getElementById('activeModuleTitle').innerText = 'User Access Control';
                 ws.innerHTML = `
                     <div class="card">
                         <h3>➕ Create New User (Username & Password)</h3>
-                        <div class="form-grid">
-                            <div><label>Role</label><select id="newRole"><option value="TEACHER">Teacher</option><option value="FINANCE">Finance Officer</option><option value="STUDENT">Student</option></select></div>
-                            <div><label>Full Name</label><input type="text" id="newName" placeholder="Full Name"></div>
-                            <div><label>Username / Reg No</label><input type="text" id="newUsername" placeholder="Username"></div>
-                            <div><label>Password</label><input type="text" id="newPassword" placeholder="Password"></div>
+                        <div class="form-grid" onkeydown="checkFormEnter(event, 'createNewUser')">
+                            <div>
+                                <label>Role</label>
+                                <select id="newRole">
+                                    <option value="TEACHER">Teacher</option>
+                                    <option value="FINANCE">Finance Officer</option>
+                                    <option value="STUDENT">Student</option>
+                                </select>
+                            </div>
+                            <div><label>Full Name</label><input type="text" id="newName" placeholder="e.g. Ali Juma"></div>
+                            <div><label>Username / Reg No</label><input type="text" id="newUsername" placeholder="e.g. AGEC-2026-002"></div>
+                            <div><label>Password</label><input type="text" id="newPassword" placeholder="Assign Password"></div>
                         </div>
-                        <button class="btn btn-success" onclick="createNewUser()">Create Account</button>
+                        <button type="button" class="btn btn-success" onclick="createNewUser()">Create Account</button>
                     </div>
 
                     <div class="card">
                         <h3>🔒 User Access Control & Password Reset</h3>
                         <table>
-                            <thead><tr><th>Role</th><th>Name</th><th>Username</th><th>Status</th><th>New Password</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Role</th><th>Name</th><th>Username</th><th>Status</th><th>Update Password</th><th>Action</th></tr></thead>
                             <tbody>
-                                ${Object.entries(systemUsers).flatMap(([role, list]) => list.map((u, i) => `
+                                ${Object.entries(systemUsers).flatMap(([role, list]) => (list || []).map((u, i) => `
                                     <tr>
                                         <td><span class="status-pill st-approved">${role}</span></td>
                                         <td>${u.name}</td>
                                         <td><strong>${u.username}</strong></td>
                                         <td><span class="status-pill ${u.locked ? 'st-locked' : 'st-approved'}">${u.locked ? 'Locked' : 'Active'}</span></td>
-                                        <td><input type="text" id="p_${role}_${i}" placeholder="New pass" style="width:100px; padding:4px;"> <button class="btn btn-sm btn-warning" onclick="updatePass('${role}', ${i})">Save</button></td>
-                                        <td>${u.username==='admin'?'Protected':`<button class="btn btn-sm ${u.locked?'btn-success':'btn-danger'}" onclick="toggleLock('${role}', ${i})">${u.locked?'Unlock':'Lock'}</button>`}</td>
+                                        <td>
+                                            <input type="text" id="p_${role}_${i}" placeholder="New pass" style="width:100px; display:inline-block; margin:0; padding:4px; font-size:12px;">
+                                            <button type="button" class="btn btn-sm btn-warning" onclick="updatePass('${role}', ${i})">Save</button>
+                                        </td>
+                                        <td>
+                                            ${u.username === 'admin' ? 'Protected' : `
+                                                <button type="button" class="btn btn-sm ${u.locked ? 'btn-success' : 'btn-danger'}" onclick="toggleLock('${role}', ${i})">
+                                                    ${u.locked ? 'Unlock' : 'Lock'}
+                                                </button>
+                                            `}
+                                        </td>
                                     </tr>
                                 `)).join('')}
                             </tbody>
@@ -604,22 +671,24 @@
                 `;
             } else if (mod === 'teacher_dashboard') {
                 document.getElementById('activeModuleTitle').innerText = 'Teacher Portal';
-                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">Use the menu to submit student scores.</p></div>`;
+                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">Use the menu to submit student scores and print reports.</p></div>`;
             } else if (mod === 'enter_marks') {
                 document.getElementById('activeModuleTitle').innerText = 'Enter Student Marks';
                 ws.innerHTML = `
                     <div class="card">
                         <h3>✍️ Submit Exam Marks</h3>
-                        <label>Student</label><select id="mStudent">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select>
-                        <label>Subject</label><input type="text" id="mSubject" placeholder="Subject Name">
-                        <label>Marks (0-100)</label><input type="number" id="mScore" placeholder="85">
-                        <button class="btn" onclick="teacherSubmitMarks()">Submit Marks</button>
+                        <div onkeydown="checkFormEnter(event, 'teacherSubmitMarks')">
+                            <label>Student</label><select id="mStudent">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select>
+                            <label>Subject</label><input type="text" id="mSubject" placeholder="Subject Name">
+                            <label>Marks (0-100)</label><input type="number" id="mScore" placeholder="85">
+                        </div>
+                        <button type="button" class="btn" onclick="teacherSubmitMarks()">Submit Marks</button>
                     </div>
                 `;
             } else if (mod === 'student_portal') {
                 document.getElementById('activeModuleTitle').innerText = 'Student Portal';
                 const st = db.students.find(s => s.regNo === session.user) || db.students[0];
-                const notPaid = st.feeTotal - st.feePaid;
+                const notPaid = (st.feeTotal || 0) - (st.feePaid || 0);
                 ws.innerHTML = `
                     <div id="printableArea">
                         <div class="card">
@@ -627,8 +696,8 @@
                             <p style="color:var(--text-muted);">Reg No: <strong>${st.regNo}</strong> | Class: <strong>${st.class}</strong></p>
                         </div>
                         <div class="stats-grid">
-                            <div class="stat-card"><div class="label">Amount (Total Fee)</div><div class="value">${st.feeTotal.toLocaleString()} TZS</div></div>
-                            <div class="stat-card"><div class="label">Amount Paid</div><div class="value" style="color:var(--success);">${st.feePaid.toLocaleString()} TZS</div></div>
+                            <div class="stat-card"><div class="label">Amount (Total Fee)</div><div class="value">${(st.feeTotal||0).toLocaleString()} TZS</div></div>
+                            <div class="stat-card"><div class="label">Amount Paid</div><div class="value" style="color:var(--success);">${(st.feePaid||0).toLocaleString()} TZS</div></div>
                             <div class="stat-card"><div class="label">Not Paid (Remaining)</div><div class="value" style="color:var(--danger);">${notPaid.toLocaleString()} TZS</div></div>
                             <div class="stat-card"><div class="label">Balance</div><div class="value">${notPaid > 0 ? '-' + notPaid.toLocaleString() : '0'} TZS</div></div>
                         </div>
@@ -667,7 +736,6 @@
             });
         }
 
-        // --- PRINT REPORT FUNCTION (WITH AGEC LOGO HEADER) ---
         function printReport(title) {
             const area = document.getElementById('printableArea');
             const headerDiv = area.querySelector('.print-header') || document.createElement('div');
@@ -676,10 +744,10 @@
                 <img src="AGEC.jpg" alt="AGEC Logo" onerror="this.style.display='none'">
                 <div>
                     <h2 style="color:#1e3a8a; font-size:18px;">ABIDHAR AL-GHAFAR ENGLISH CENTRE (AGEC)</h2>
-                    <p style="font-size:12px; color:#555;">Official Report: ${title} | Generated on: ${new Date().toLocaleDateString()}</p>
+                    <p style="font-size:12px; color:#555;">Official Report: ${title} | Date: ${new Date().toLocaleDateString()}</p>
                 </div>
             `;
-            if(!area.contains(headerDiv)) area.prepend(headerDiv);
+            if (!area.contains(headerDiv)) area.prepend(headerDiv);
             window.print();
         }
 
@@ -687,16 +755,26 @@
             const data = document.getElementById('payReg').value.split('|');
             const amount = parseInt(document.getElementById('payAmount').value);
             const method = document.getElementById('payMethod').value;
-            const attachFile = document.getElementById('payAttach').files[0];
-            const attachName = attachFile ? attachFile.name : 'No Attachment';
+            const attachInput = document.getElementById('payAttach');
+            const attachName = (attachInput && attachInput.files && attachInput.files[0]) ? attachInput.files[0].name : 'No Attachment';
 
-            if(!amount || amount <= 0) { alert('Enter valid amount.'); return; }
+            if (!amount || amount <= 0) { alert('Please enter a valid payment amount.'); return; }
 
             const student = db.students.find(s => s.regNo === data[0]);
-            student.feePaid += amount;
-            db.payments.unshift({ id: db.payments.length + 1, regNo: data[0], studentName: data[1], amount, date: new Date().toISOString().slice(0,10), method, attachment: attachName });
+            if (student) student.feePaid = (student.feePaid || 0) + amount;
+
+            db.payments.unshift({
+                id: db.payments.length + 1,
+                regNo: data[0],
+                studentName: data[1],
+                amount: amount,
+                date: new Date().toISOString().slice(0, 10),
+                method: method,
+                attachment: attachName
+            });
+
             saveSystem();
-            logAudit(`Issued payment receipt for ${data[1]} (${amount} TZS)`);
+            logAudit(`Issued payment receipt for ${data[1]} (${amount.toLocaleString()} TZS)`);
             alert('Payment recorded and receipt issued successfully!');
             renderModule('finance');
         }
@@ -707,13 +785,36 @@
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value.trim();
 
-            if(!name || !username || !password) { alert('Fill all fields.'); return; }
-            systemUsers[role].push({ username, password, name, locked: false });
-            if(role === 'STUDENT') {
-                db.students.push({ regNo: username, name: name, class: 'English Level 1', guardian: 'Parent', status: 'Active', feeTotal: 300000, feePaid: 0 });
+            if (!name || !username || !password) {
+                alert('Please fill out all fields (Name, Username, and Password).');
+                return;
             }
+
+            if (!systemUsers[role]) systemUsers[role] = [];
+
+            const exists = Object.values(systemUsers).flat().some(u => u && u.username === username);
+            if (exists) {
+                alert('Username already exists! Please choose another username.');
+                return;
+            }
+
+            systemUsers[role].push({ username: username, password: password, name: name, locked: false });
+
+            if (role === 'STUDENT') {
+                db.students.push({
+                    regNo: username,
+                    name: name,
+                    class: 'English Level 1',
+                    guardian: 'Guardian',
+                    status: 'Active',
+                    feeTotal: 300000,
+                    feePaid: 0
+                });
+            }
+
             saveSystem();
-            alert(`User ${name} created successfully!`);
+            logAudit(`Created new ${role} account: ${name} (${username})`);
+            alert(`Account created successfully for ${name}!`);
             renderModule('manage_users');
         }
 
@@ -721,10 +822,11 @@
             const st = document.getElementById('mStudent').value.split('|');
             const subject = document.getElementById('mSubject').value.trim();
             const score = parseInt(document.getElementById('mScore').value);
-            if(!subject || isNaN(score)) { alert('Fill all fields correctly.'); return; }
+            if (!subject || isNaN(score)) { alert('Fill all fields correctly.'); return; }
             const grade = score >= 80 ? 'A' : (score >= 70 ? 'B' : (score >= 60 ? 'C' : 'D'));
             db.exams.push({ studentReg: st[0], studentName: st[1], subject, score, grade, status: 'Published' });
             saveSystem();
+            logAudit(`Submitted ${subject} marks (${score}%) for ${st[1]}`);
             alert('Marks submitted successfully!');
             document.getElementById('mSubject').value = '';
             document.getElementById('mScore').value = '';
@@ -733,14 +835,16 @@
         function toggleLock(role, index) {
             systemUsers[role][index].locked = !systemUsers[role][index].locked;
             saveSystem();
+            logAudit(`${systemUsers[role][index].locked ? 'Locked' : 'Unlocked'} user: ${systemUsers[role][index].username}`);
             renderModule('manage_users');
         }
 
         function updatePass(role, index) {
             const p = document.getElementById(`p_${role}_${index}`).value.trim();
-            if(!p) { alert('Enter new password'); return; }
+            if (!p) { alert('Enter a new password.'); return; }
             systemUsers[role][index].password = p;
             saveSystem();
+            logAudit(`Updated password for user: ${systemUsers[role][index].username}`);
             alert('Password updated successfully!');
             renderModule('manage_users');
         }
