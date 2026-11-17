@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART SCHOOL MANAGEMENT SYSTEM (SMIS)</title>
+    <title>AGEC - Abidhar Al-ghafar English Centre</title>
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --bg-sidebar: #0b1120;
-            --primary: #38bdf8;
-            --primary-hover: #0284c7;
-            --accent: #eab308;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
+            --bg-dark: #f0f4f8;
+            --bg-card: #ffffff;
+            --bg-sidebar: #1e3a8a;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent: #f59e0b;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #cbd5e1;
         }
         * {
             box-sizing: border-box;
@@ -39,7 +39,7 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
         }
         .login-box {
             background: var(--bg-card);
@@ -48,16 +48,16 @@
             padding: 32px;
             width: 100%;
             max-width: 440px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
         }
         .login-box h1 {
-            font-size: 22px;
-            color: var(--primary);
+            font-size: 20px;
+            color: #1e3a8a;
             text-align: center;
             margin-bottom: 6px;
         }
         .login-box p.subtitle {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-muted);
             text-align: center;
             margin-bottom: 24px;
@@ -76,18 +76,19 @@
             display: flex;
             flex-direction: column;
             padding: 20px 14px;
+            color: #ffffff;
         }
         .brand {
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 800;
-            color: var(--primary);
+            color: #ffffff;
             padding: 0 10px 18px 10px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
             margin-bottom: 15px;
         }
         .brand span {
             display: block;
-            font-size: 11px;
+            font-size: 10px;
             color: var(--accent);
             font-weight: 600;
             margin-top: 3px;
@@ -97,12 +98,12 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
         .nav-item {
             padding: 10px 14px;
             border-radius: 8px;
-            color: var(--text-muted);
+            color: #cbd5e1;
             font-size: 13.5px;
             font-weight: 600;
             cursor: pointer;
@@ -112,8 +113,8 @@
             transition: 0.15s;
         }
         .nav-item:hover, .nav-item.active {
-            background: #1e293b;
-            color: var(--primary);
+            background: #2563eb;
+            color: #ffffff;
         }
 
         .main-area {
@@ -137,7 +138,7 @@
             font-size: 13px;
         }
         .role-tag {
-            background: rgba(56, 189, 248, 0.15);
+            background: #e0e7ff;
             color: var(--primary);
             border: 1px solid var(--primary);
             padding: 3px 10px;
@@ -162,6 +163,7 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .stat-card .label {
             font-size: 12px;
@@ -169,10 +171,10 @@
             text-transform: uppercase;
         }
         .stat-card .value {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
             margin-top: 6px;
-            color: var(--text-main);
+            color: var(--primary);
         }
         .card {
             background: var(--bg-card);
@@ -180,6 +182,7 @@
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .card h3 {
             font-size: 16px;
@@ -201,7 +204,7 @@
         input, select, textarea {
             width: 100%;
             padding: 10px 12px;
-            background: var(--bg-dark);
+            background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text-main);
@@ -211,10 +214,11 @@
         }
         input:focus, select:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
         .btn {
             background: var(--primary);
-            color: #0f172a;
+            color: #ffffff;
             border: none;
             padding: 10px 18px;
             border-radius: 8px;
@@ -223,9 +227,10 @@
             cursor: pointer;
             transition: 0.15s;
         }
-        .btn:hover { background: var(--primary-hover); color: #fff; }
-        .btn-success { background: var(--success); color: #052e16; }
-        .btn-danger { background: var(--danger); color: #fff; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--accent); color: #000; }
         .btn-sm { padding: 5px 10px; font-size: 11.5px; }
 
         table {
@@ -240,7 +245,7 @@
             border-bottom: 1px solid var(--border);
         }
         th {
-            background: var(--bg-dark);
+            background: #f8fafc;
             color: var(--text-muted);
             font-weight: 700;
             font-size: 12px;
@@ -252,34 +257,35 @@
             font-size: 11px;
             font-weight: 700;
         }
-        .st-approved { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .st-approved { background: #dcfce7; color: #16a34a; }
+        .st-locked { background: #fee2e2; color: #dc2626; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <!-- 1. SECURE LOGIN SCREEN (RESTRICTED ACCESS) -->
+    <!-- 1. SECURE LOGIN SCREEN (PRESS ENTER SUPPORT) -->
     <div id="loginScreen">
-        <div class="login-box">
-            <h1>SMART SCHOOL SMIS</h1>
-            <p class="subtitle">Strict Administrator-Issued Credentials Portal</p>
+        <div class="login-box" onkeydown="checkLoginEnter(event)">
+            <h1>ABIDHAR AL-GHAFAR</h1>
+            <p class="subtitle">English Centre (AGEC) Portal</p>
 
             <label>Select Portal Type / Role</label>
-            <select id="loginRole" onchange="toggleLoginFields()">
+            <select id="loginRole">
                 <option value="SUPER_ADMIN">Administrator (Super Admin)</option>
                 <option value="TEACHER">Teacher Portal</option>
                 <option value="STUDENT">Student Portal</option>
             </select>
 
-            <label>Username / Registration No (Issued by Admin)</label>
-            <input type="text" id="loginUsername" placeholder="e.g. TCH-001 or SMIS-2026-001">
+            <label>Username / Registration No</label>
+            <input type="text" id="loginUsername" placeholder="e.g. admin or AGEC-2026-001">
 
-            <label>Password (Generated by Admin)</label>
-            <input type="password" id="loginPassword" placeholder="Enter secure password">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter password">
 
             <button class="btn" style="width: 100%; margin-top: 8px;" onclick="handleLogin()">Login to System</button>
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px; text-align: center;">
-                ⚠️ Unregistered users cannot access the system. Contact Admin for credentials.
+                💡 Tip: You can press <b>Enter</b> on your keyboard to login.
             </p>
         </div>
     </div>
@@ -288,7 +294,7 @@
     <div id="appLayout">
         <aside class="sidebar">
             <div class="brand">
-                🎓 SMART SMIS
+                Abidhar Al-ghafar (AGEC)
                 <span id="sidebarRoleLabel">PORTAL</span>
             </div>
             <div class="nav-list" id="navMenu"></div>
@@ -309,35 +315,35 @@
     </div>
 
     <script>
-        // --- SYSTEM USERS DATABASE (MANAGED EXCLUSIVELY BY ADMIN) ---
-        let systemUsers = JSON.parse(localStorage.getItem('smart_smis_users')) || {
-            SUPER_ADMIN: [{ username: 'admin', password: 'admin123', name: 'Suleiman Salum' }],
+        // --- SYSTEM USERS DATABASE ---
+        let systemUsers = JSON.parse(localStorage.getItem('agec_smis_users')) || {
+            SUPER_ADMIN: [{ username: 'admin', password: 'admin123', name: 'Suleiman Salum', locked: false }],
             TEACHER: [
-                { username: 'tch_victor', password: 'pass123', name: 'Mr. Victor Bwachele' },
-                { username: 'tch_nahlat', password: 'pass123', name: 'Ms. Nahlat Khamis' }
+                { username: 'tch_victor', password: 'pass123', name: 'Mr. Victor Bwachele', locked: false },
+                { username: 'tch_nahlat', password: 'pass123', name: 'Ms. Nahlat Khamis', locked: false }
             ],
             STUDENT: [
-                { username: 'SMIS-2026-001', password: 'stu123', name: 'Asha Salum Ali' }
+                { username: 'AGEC-2026-001', password: 'stu123', name: 'Asha Salum Ali', locked: false }
             ]
         };
 
-        let db = JSON.parse(localStorage.getItem('smart_smis_db')) || {
+        let db = JSON.parse(localStorage.getItem('agec_smis_db')) || {
             students: [
-                { regNo: 'SMIS-2026-001', name: 'Asha Salum Ali', class: 'Form 4A', guardian: 'Salum Ali', status: 'Active', feeTotal: 500000, feePaid: 350000 }
+                { regNo: 'AGEC-2026-001', name: 'Asha Salum Ali', class: 'English Level 2', guardian: 'Salum Ali', status: 'Active', feeTotal: 300000, feePaid: 200000 }
             ],
             exams: [
-                { studentReg: 'SMIS-2026-001', studentName: 'Asha Salum Ali', subject: 'Accountancy', score: 88, grade: 'A', status: 'Published' }
+                { studentReg: 'AGEC-2026-001', studentName: 'Asha Salum Ali', subject: 'Advanced Grammar', score: 88, grade: 'A', status: 'Published' }
             ],
             auditLogs: [
-                { time: '2026-11-17 08:00', user: 'System', role: 'SUPER_ADMIN', action: 'System Initialized with Secured Credential Verification' }
+                { time: '2026-11-17 08:00', user: 'System', role: 'SUPER_ADMIN', action: 'AGEC Portal Initialized' }
             ]
         };
 
         let session = { user: '', role: '', fullName: '' };
 
         function saveSystem() {
-            localStorage.setItem('smart_smis_users', JSON.stringify(systemUsers));
-            localStorage.setItem('smart_smis_db', JSON.stringify(db));
+            localStorage.setItem('agec_smis_users', JSON.stringify(systemUsers));
+            localStorage.setItem('agec_smis_db', JSON.stringify(db));
         }
 
         function logAudit(action) {
@@ -346,7 +352,20 @@
             saveSystem();
         }
 
-        // --- STRICT LOGIN & AUTHENTICATION WITH ADMIN-ISSUED CREDENTIALS ---
+        // --- ENTER KEY SUPPORT FOR LOGIN ---
+        function checkLoginEnter(event) {
+            if (event.key === 'Enter') {
+                handleLogin();
+            }
+        }
+
+        // --- ENTER KEY SUPPORT FOR DYNAMIC FORMS ---
+        function checkFormEnter(event, callbackName) {
+            if (event.key === 'Enter') {
+                window[callbackName]();
+            }
+        }
+
         function handleLogin() {
             const role = document.getElementById('loginRole').value;
             const username = document.getElementById('loginUsername').value.trim();
@@ -357,15 +376,18 @@
                 return;
             }
 
-            // Verify if user exists in the admin-generated database for that specific role
             const userRecord = systemUsers[role]?.find(u => u.username === username && u.password === password);
 
             if (!userRecord) {
-                alert('Access Denied: Invalid credentials or username was not created/registered by the Administrator!');
+                alert('Access Denied: Invalid credentials or account does not exist!');
                 return;
             }
 
-            // Successful Login
+            if (userRecord.locked) {
+                alert('Account Locked: Your account has been locked by the Administrator. Contact support.');
+                return;
+            }
+
             session = { user: username, role: role, fullName: userRecord.name };
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appLayout').style.display = 'flex';
@@ -373,7 +395,7 @@
             document.getElementById('loggedUserDisplay').innerText = userRecord.name;
             document.getElementById('loggedRoleBadge').innerText = role.replace('_', ' ');
 
-            logAudit(`Successfully logged into ${role} portal`);
+            logAudit(`Logged into ${role} portal`);
             buildMenu();
         }
 
@@ -385,7 +407,6 @@
             document.getElementById('loginPassword').value = '';
         }
 
-        // --- ROLE-BASED DYNAMIC MENU ---
         function buildMenu() {
             const nav = document.getElementById('navMenu');
             nav.innerHTML = '';
@@ -394,10 +415,10 @@
             if (session.role === 'SUPER_ADMIN') {
                 modules = [
                     { key: 'dashboard', label: '📊 Dashboard' },
-                    { key: 'manage_users', label: '⚙️ Manage Users & Credentials' },
+                    { key: 'manage_users', label: '⚙️ Manage Users & Passwords' },
                     { key: 'students', label: '👨‍🎓 Student Management' },
                     { key: 'exams', label: '📝 Exams & Results' },
-                    { key: 'audit', label: '🛡️ Audit Trail Logs' }
+                    { key: 'audit', label: '🛡️ Audit Logs' }
                 ];
             } else if (session.role === 'TEACHER') {
                 modules = [
@@ -406,7 +427,7 @@
                 ];
             } else if (session.role === 'STUDENT') {
                 modules = [
-                    { key: 'student_portal', label: '🎓 My Academic Portal' }
+                    { key: 'student_portal', label: '🎓 My Academic & Fees Portal' }
                 ];
             }
 
@@ -425,69 +446,97 @@
             renderModule(modules[0].key);
         }
 
-        // --- MODULE RENDERING & ADMIN USER CREATION ---
         function renderModule(mod) {
             const ws = document.getElementById('workspaceContent');
 
             if (mod === 'dashboard') {
-                document.getElementById('activeModuleTitle').innerText = 'Admin Dashboard';
+                document.getElementById('activeModuleTitle').innerText = 'Admin Dashboard - AGEC';
                 ws.innerHTML = `
                     <div class="stats-grid">
-                        <div class="stat-card"><div class="label">Registered Students</div><div class="value" style="color:var(--primary);">${db.students.length}</div></div>
+                        <div class="stat-card"><div class="label">Registered Students</div><div class="value">${db.students.length}</div></div>
                         <div class="stat-card"><div class="label">Active Teachers</div><div class="value">${systemUsers.TEACHER.length}</div></div>
                     </div>
                     <div class="card">
-                        <h3>Welcome Administrator, ${session.fullName}</h3>
-                        <p style="color:var(--text-muted); font-size:13px;">Use the 'Manage Users' section to create usernames and passwords for new teachers and students.</p>
+                        <h3>Welcome to Abidhar Al-ghafar English Centre (AGEC), ${session.fullName}</h3>
+                        <p style="color:var(--text-muted); font-size:13px;">Manage user passwords, lock/unlock accounts, and track student fee balances securely.</p>
                     </div>
                 `;
             } else if (mod === 'manage_users') {
-                document.getElementById('activeModuleTitle').innerText = 'Manage Users & Credentials (Admin Only)';
+                document.getElementById('activeModuleTitle').innerText = 'Manage Users, Passwords & Lock Status';
                 ws.innerHTML = `
                     <div class="card">
-                        <h3>➕ Create User Credentials (Teacher or Student)</h3>
-                        <div class="form-grid">
-                            <div><label>User Role</label><select id="newRole"><option value="TEACHER">Teacher</option><option value="STUDENT">Student</option></select></div>
-                            <div><label>Full Name</label><input type="text" id="newName" placeholder="e.g. John Doe"></div>
-                            <div><label>Username / Reg No</label><input type="text" id="newUsername" placeholder="e.g. TCH-002 or SMIS-2026-002"></div>
-                            <div><label>Password</label><input type="text" id="newPassword" placeholder="Assign password"></div>
+                        <h3>➕ Create User Credentials</h3>
+                        <div class="form-grid" onkeydown="checkFormEnter(event, 'createNewUserCredential')">
+                            <div><label>Role</label><select id="newRole"><option value="TEACHER">Teacher</option><option value="STUDENT">Student</option></select></div>
+                            <div><label>Full Name</label><input type="text" id="newName" placeholder="e.g. Ali Juma"></div>
+                            <div><label>Username / Reg No</label><input type="text" id="newUsername" placeholder="e.g. AGEC-2026-002"></div>
+                            <div><label>Password</label><input type="text" id="newPassword" placeholder="Password"></div>
                         </div>
-                        <button class="btn btn-success" onclick="createNewUserCredential()">Generate & Save Credentials</button>
+                        <button class="btn btn-success" onclick="createNewUserCredential()">Generate Account</button>
                     </div>
 
                     <div class="card">
-                        <h3>📋 List of Authorized System Users</h3>
+                        <h3>🔒 User Access Control (Lock/Unlock & Update Passwords)</h3>
                         <table>
-                            <thead><tr><th>Role</th><th>Full Name</th><th>Username</th><th>Password</th></tr></thead>
+                            <thead><tr><th>Role</th><th>Name</th><th>Username</th><th>Status</th><th>Update Password</th><th>Action</th></tr></thead>
                             <tbody>
-                                ${Object.entries(systemUsers).flatMap(([r, list]) => list.map(u => `<tr><td><span class="status-pill st-approved">${r}</span></td><td>${u.name}</td><td><strong>${u.username}</strong></td><td><code>${u.password}</code></td></tr>`)).join('')}
+                                ${Object.entries(systemUsers).flatMap(([role, list]) => list.map((u, i) => `
+                                    <tr>
+                                        <td><span class="status-pill st-approved">${role}</span></td>
+                                        <td>${u.name}</td>
+                                        <td><strong>${u.username}</strong></td>
+                                        <td><span class="status-pill ${u.locked ? 'st-locked' : 'st-approved'}">${u.locked ? 'Locked' : 'Active'}</span></td>
+                                        <td>
+                                            <input type="text" id="p_${role}_${i}" placeholder="New pass" style="width:110px; display:inline-block; margin:0; padding:5px; font-size:11px;">
+                                            <button class="btn btn-sm btn-warning" onclick="updateUserPassword('${role}', ${i})">Change</button>
+                                        </td>
+                                        <td>
+                                            ${u.username === 'admin' ? 'Protected' : `
+                                                <button class="btn btn-sm ${u.locked ? 'btn-success' : 'btn-danger'}" onclick="toggleLockUser('${role}', ${i})">
+                                                    ${u.locked ? 'Unlock' : 'Lock'}
+                                                </button>
+                                            `}
+                                        </td>
+                                    </tr>
+                                `)).join('')}
                             </tbody>
                         </table>
                     </div>
                 `;
             } else if (mod === 'teacher_dashboard') {
                 document.getElementById('activeModuleTitle').innerText = 'Teacher Portal Overview';
-                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">You are successfully logged in using your administrator-assigned credentials. You can enter and update student grades securely.</p></div>`;
+                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">AGEC Teacher Dashboard. Use the menu to submit student scores.</p></div>`;
             } else if (mod === 'enter_marks') {
                 document.getElementById('activeModuleTitle').innerText = 'Enter Student Marks';
                 ws.innerHTML = `
                     <div class="card">
                         <h3>✍️ Submit Exam Marks</h3>
-                        <label>Student</label>
-                        <select id="mStudent">${db.students.map(s => `<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select>
-                        <label>Subject</label><input type="text" id="mSubject" placeholder="Subject Name">
-                        <label>Marks (0-100)</label><input type="number" id="mScore" placeholder="85">
+                        <div onkeydown="checkFormEnter(event, 'teacherSubmitMarks')">
+                            <label>Student</label>
+                            <select id="mStudent">${db.students.map(s => `<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select>
+                            <label>Subject</label><input type="text" id="mSubject" placeholder="Subject Name">
+                            <label>Marks (0-100)</label><input type="number" id="mScore" placeholder="85">
+                        </div>
                         <button class="btn" onclick="teacherSubmitMarks()">Submit Marks</button>
                     </div>
                 `;
             } else if (mod === 'student_portal') {
-                document.getElementById('activeModuleTitle').innerText = 'Student Academic & Fee Portal';
+                document.getElementById('activeModuleTitle').innerText = 'Student Financial & Academic Portal';
                 const studentData = db.students.find(s => s.regNo === session.user) || db.students[0];
+                const notPaid = studentData.feeTotal - studentData.feePaid;
                 ws.innerHTML = `
                     <div class="card">
                         <h3>🎓 Welcome, ${session.fullName} (Reg: ${studentData.regNo})</h3>
-                        <p style="color:var(--text-muted);">Class: <strong>${studentData.class}</strong> | Fee Balance: <strong style="color:var(--danger);">${(studentData.feeTotal - studentData.feePaid).toLocaleString()} TZS</strong></p>
+                        <p style="color:var(--text-muted);">Class: <strong>${studentData.class}</strong></p>
                     </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="label">Total Fee (Amount)</div><div class="value">${studentData.feeTotal.toLocaleString()} TZS</div></div>
+                        <div class="stat-card"><div class="label">Amount Paid</div><div class="value" style="color:var(--success);">${studentData.feePaid.toLocaleString()} TZS</div></div>
+                        <div class="stat-card"><div class="label">Not Paid (Remaining Fee)</div><div class="value" style="color:var(--danger);">${notPaid.toLocaleString()} TZS</div></div>
+                        <div class="stat-card"><div class="label">Account Balance</div><div class="value" style="color:${notPaid > 0 ? 'var(--danger)' : 'var(--success)'};">${notPaid > 0 ? '-' + notPaid.toLocaleString() : '0'} TZS</div></div>
+                    </div>
+
                     <div class="card">
                         <h3>📄 My Exam Results</h3>
                         <table>
@@ -509,12 +558,10 @@
                         </table>
                     </div>
                 `;
-            } else {
-                ws.innerHTML = `<div class="card"><h3>Module Active</h3></div>`;
             }
         }
 
-        // --- ADMIN ACTION TO CREATE CREDENTIALS ---
+        // --- ADMIN ACTIONS (LOCK/UNLOCK & UPDATE PASSWORDS) ---
         function createNewUserCredential() {
             const role = document.getElementById('newRole').value;
             const name = document.getElementById('newName').value.trim();
@@ -526,23 +573,45 @@
                 return;
             }
 
-            // Check if username already exists
             const exists = Object.values(systemUsers).flat().some(u => u.username === username);
             if (exists) {
-                alert('Username already exists! Choose another username.');
+                alert('Username already exists!');
                 return;
             }
 
-            systemUsers[role].push({ username, password, name });
+            systemUsers[role].push({ username, password, name, locked: false });
             
-            // If student, also add to student registry if not present
             if (role === 'STUDENT') {
-                db.students.push({ regNo: username, name: name, class: 'Form 1A', guardian: 'Parent', status: 'Active', feeTotal: 500000, feePaid: 0 });
+                db.students.push({ regNo: username, name: name, class: 'English Level 1', guardian: 'Parent', status: 'Active', feeTotal: 300000, feePaid: 0 });
             }
 
             saveSystem();
-            logAudit(`Admin created login credentials for ${role}: ${name} (${username})`);
-            alert(`Credentials successfully generated for ${name}! They can now log in using Username: ${username} and Password: ${password}.`);
+            logAudit(`Created credentials for ${role}: ${name} (${username})`);
+            alert(`Account successfully created for ${name}!`);
+            renderModule('manage_users');
+        }
+
+        function toggleLockUser(role, index) {
+            const user = systemUsers[role][index];
+            user.locked = !user.locked;
+            saveSystem();
+            logAudit(`${user.locked ? 'Locked' : 'Unlocked'} user account: ${user.username}`);
+            renderModule('manage_users');
+        }
+
+        function updateUserPassword(role, index) {
+            const newPassInput = document.getElementById(`p_${role}_${index}`);
+            const newPass = newPassInput.value.trim();
+            if (!newPass || newPass.length < 4) {
+                alert('Password must be at least 4 characters long.');
+                return;
+            }
+
+            systemUsers[role][index].password = newPass;
+            saveSystem();
+            logAudit(`Updated password for user: ${systemUsers[role][index].username}`);
+            alert('Password updated successfully!');
+            newPassInput.value = '';
             renderModule('manage_users');
         }
 
@@ -557,6 +626,8 @@
             saveSystem();
             logAudit(`Teacher ${session.fullName} entered marks for ${st[1]}`);
             alert('Marks submitted successfully!');
+            document.getElementById('mSubject').value = '';
+            document.getElementById('mScore').value = '';
         }
     </script>
 </body>
