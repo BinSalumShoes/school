@@ -355,7 +355,6 @@
     </div>
 
     <script>
-        // --- SAFE INITIALIZATION OF SYSTEM DATABASE ---
         const DEFAULT_USERS = {
             SUPER_ADMIN: [{ username: 'admin', password: 'admin123', name: 'Suleiman Salum', locked: false }],
             FINANCE: [{ username: 'fin_officer', password: 'fin123', name: 'Finance Manager', locked: false }],
@@ -376,7 +375,7 @@
                 { studentReg: 'AGEC-2026-001', studentName: 'Asha Salum Ali', subject: 'Advanced Grammar', score: 88, grade: 'A', status: 'Published' }
             ],
             payments: [
-                { id: 1, regNo: 'AGEC-2026-001', studentName: 'Asha Salum Ali', amount: 200000, date: '2026-11-01', method: 'Cash', attachment: 'Receipt_001.pdf' }
+                { id: 1, regNo: 'AGEC-2026-001', studentName: 'Asha Salum Ali', amount: 200000, date: '2026-11-01', method: 'Cash', attachmentName: 'Sample_Receipt.pdf', attachmentData: '' }
             ],
             auditLogs: [
                 { time: '2026-11-17 08:00', user: 'System', role: 'SUPER_ADMIN', action: 'AGEC Portal Initialized' }
@@ -410,7 +409,6 @@
             saveSystem();
         }
 
-        // --- AUTO LOGOUT AFTER 1 HOUR ---
         function resetIdleTimer() {
             clearTimeout(idleTimer);
             idleTimer = setTimeout(() => {
@@ -594,7 +592,7 @@
                             <div><label>Student</label><select id="payReg">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select></div>
                             <div><label>Amount (TZS)</label><input type="number" id="payAmount" placeholder="50000"></div>
                             <div><label>Payment Method</label><select id="payMethod"><option>Cash</option><option>Bank / Control Number</option><option>Mobile Money</option></select></div>
-                            <div><label>Attach Receipt / Proof</label><input type="file" id="payAttach"></div>
+                            <div><label>Attach Receipt (Image / PDF)</label><input type="file" id="payAttach"></div>
                         </div>
                         <button type="button" class="btn btn-success" onclick="recordPayment()">Record & Issue Receipt</button>
                     </div>
@@ -603,7 +601,7 @@
                         <div class="card">
                             <h3>📄 Issued Payment Receipts & Attachments</h3>
                             <table>
-                               <thead><tr><th>Receipt No</th><th>Reg No</th><th>Student Name</th><th>Amount</th><th>Method</th><th>Date</th><th>Attachment</th></tr></thead>
+                               <thead><tr><th>Receipt No</th><th>Reg No</th><th>Student Name</th><th>Amount</th><th>Method</th><th>Date</th><th>Attached Document</th></tr></thead>
                                <tbody>
                                    ${(db.payments || []).map(p => `<tr>
                                        <td><strong>#RCP-${p.id}</strong></td>
@@ -612,7 +610,9 @@
                                        <td style="color:var(--success);"><strong>${Number(p.amount).toLocaleString()} TZS</strong></td>
                                        <td>${p.method}</td>
                                        <td>${p.date}</td>
-                                       <td>${p.attachment || 'None'}</td>
+                                       <td>
+                                           ${p.attachmentData ? `<a href="${p.attachmentData}" download="${p.attachmentName}" style="color:var(--primary); font-weight:bold; text-decoration:underline;">📥 Download (${p.attachmentName})</a>` : 'No Attachment'}
+                                       </td>
                                    </tr>`).join('')}
                                </tbody>
                             </table>
@@ -758,28 +758,41 @@
             const amount = parseInt(document.getElementById('payAmount').value);
             const method = document.getElementById('payMethod').value;
             const attachInput = document.getElementById('payAttach');
-            const attachName = (attachInput && attachInput.files && attachInput.files[0]) ? attachInput.files[0].name : 'No Attachment';
 
             if (!amount || amount <= 0) { alert('Please enter a valid payment amount.'); return; }
 
-            const student = db.students.find(s => s.regNo === data[0]);
-            if (student) student.feePaid = (student.feePaid || 0) + amount;
+            const savePaymentRecord = (fileName, fileData) => {
+                const student = db.students.find(s => s.regNo === data[0]);
+                if (student) student.feePaid = (student.feePaid || 0) + amount;
 
-            if (!db.payments) db.payments = [];
-            db.payments.unshift({
-                id: db.payments.length + 1,
-                regNo: data[0],
-                studentName: data[1],
-                amount: amount,
-                date: new Date().toISOString().slice(0, 10),
-                method: method,
-                attachment: attachName
-            });
+                if (!db.payments) db.payments = [];
+                db.payments.unshift({
+                    id: db.payments.length + 1,
+                    regNo: data[0],
+                    studentName: data[1],
+                    amount: amount,
+                    date: new Date().toISOString().slice(0, 10),
+                    method: method,
+                    attachmentName: fileName,
+                    attachmentData: fileData
+                });
 
-            saveSystem();
-            logAudit(`Issued payment receipt for ${data[1]} (${amount.toLocaleString()} TZS)`);
-            alert('Payment recorded and receipt issued successfully!');
-            renderModule('finance');
+                saveSystem();
+                logAudit(`Issued payment receipt for ${data[1]} (${amount.toLocaleString()} TZS)`);
+                alert('Payment recorded and receipt issued successfully with attachment!');
+                renderModule('finance');
+            };
+
+            if (attachInput && attachInput.files && attachInput.files[0]) {
+                const file = attachInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    savePaymentRecord(file.name, e.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                savePaymentRecord('No Attachment', '');
+            }
         }
 
         function createNewUser() {
