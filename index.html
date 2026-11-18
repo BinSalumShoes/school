@@ -378,7 +378,7 @@
                 { id: 1, regNo: 'AGEC-2026-001', studentName: 'Asha Salum Ali', amount: 200000, date: '2026-11-01', method: 'Cash', attachmentName: 'Sample_Receipt.pdf', attachmentData: '' }
             ],
             auditLogs: [
-                { time: '2026-11-17 08:00', user: 'System', role: 'SUPER_ADMIN', action: 'AGEC Portal Initialized' }
+                { time: '2026-11-18 08:00', user: 'System', role: 'SUPER_ADMIN', action: 'AGEC Portal Initialized' }
             ]
         };
 
@@ -394,33 +394,56 @@
         if (!db.payments) db.payments = DEFAULT_DB.payments;
         if (!db.auditLogs) db.auditLogs = DEFAULT_DB.auditLogs;
 
-        let session = { user: '', role: '', fullName: '' };
+        let session = JSON.parse(localStorage.getItem('agec_active_session')) || { user: '', role: '', fullName: '', activeTab: '' };
         let idleTimer = null;
 
         function saveSystem() {
             localStorage.setItem('agec_smis_users', JSON.stringify(systemUsers));
             localStorage.setItem('agec_smis_db', JSON.stringify(db));
         }
+
+        function saveSession() {
+            localStorage.setItem('agec_active_session', JSON.stringify(session));
+        }
         saveSystem();
 
         function logAudit(action) {
             const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
-            db.auditLogs.unshift({ time: now, user: session.fullName || session.user, role: session.role, action });
+            db.auditLogs.unshift({
+                time: now,
+                user: session.fullName || session.user || 'Unknown',
+                role: session.role || 'SYSTEM',
+                action: action
+            });
             saveSystem();
         }
 
+        // --- AUTO LOGOUT AFTER 1 HOUR OF INACTIVITY ---
         function resetIdleTimer() {
             clearTimeout(idleTimer);
+            if (!session || !session.user) return;
             idleTimer = setTimeout(() => {
                 alert('Session expired due to 1 hour of inactivity.');
                 handleLogout();
             }, 3600000);
         }
 
+        // --- RESTORE SESSION ON PAGE REFRESH ---
         window.onload = () => {
             ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => {
                 window.addEventListener(evt, resetIdleTimer);
             });
+
+            if (session && session.user && session.role) {
+                const userList = systemUsers[session.role] || [];
+                const validUser = userList.find(u => u.username === session.user && !u.locked);
+                if (validUser) {
+                    openWorkspace(validUser, session.activeTab);
+                    return;
+                } else {
+                    localStorage.removeItem('agec_active_session');
+                }
+            }
         };
 
         function checkLoginEnter(e) { if (e.key === 'Enter') handleLogin(); }
@@ -439,28 +462,37 @@
             if (!userRecord) { alert('Invalid credentials! Check role, username, and password.'); return; }
             if (userRecord.locked) { alert('Account is locked by Admin.'); return; }
 
-            session = { user: username, role: role, fullName: userRecord.name };
+            session = { user: username, role: role, fullName: userRecord.name, activeTab: '' };
+            saveSession();
+            logAudit(`Logged into ${role} portal`);
+            openWorkspace(userRecord, '');
+        }
+
+        function openWorkspace(userRecord, restoreTab) {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appLayout').style.display = 'flex';
-            document.getElementById('sidebarRoleLabel').innerText = role.replace('_', ' ');
+            document.getElementById('sidebarRoleLabel').innerText = session.role.replace('_', ' ');
             document.getElementById('loggedUserDisplay').innerText = userRecord.name;
-            document.getElementById('loggedRoleBadge').innerText = role.replace('_', ' ');
+            document.getElementById('loggedRoleBadge').innerText = session.role.replace('_', ' ');
 
-            logAudit(`Logged into ${role}`);
             resetIdleTimer();
-            buildMenu();
+            buildMenu(restoreTab);
         }
 
         function handleLogout() {
             clearTimeout(idleTimer);
-            logAudit(`Logged out`);
+            if (session && session.user) {
+                logAudit(`Logged out of system`);
+            }
+            session = { user: '', role: '', fullName: '', activeTab: '' };
+            localStorage.removeItem('agec_active_session');
             document.getElementById('appLayout').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('loginUsername').value = '';
             document.getElementById('loginPassword').value = '';
         }
 
-        function buildMenu() {
+        function buildMenu(restoreTab) {
             const nav = document.getElementById('navMenu');
             nav.innerHTML = '';
             let modules = [];
@@ -470,18 +502,20 @@
                     { key: 'dashboard', label: '📊 Dashboard' },
                     { key: 'students', label: '👨‍🎓 Student Management' },
                     { key: 'exams', label: '📝 Exams & Results' },
-                    { key: 'finance', label: '💰 Finance Portal' },
+                    { key: 'finance', label: '💰 Finance & Receipts' },
                     { key: 'manage_users', label: '⚙️ User Access Control' },
-                    { key: 'audit', label: '🛡️ Audit Logs' }
+                    { key: 'audit', label: '🛡️ History & Audit Logs' }
                 ];
             } else if (session.role === 'FINANCE') {
                 modules = [
-                    { key: 'finance', label: '💰 Finance & Receipts' }
+                    { key: 'finance', label: '💰 Finance & Receipts' },
+                    { key: 'audit', label: '🛡️ Activity History' }
                 ];
             } else if (session.role === 'TEACHER') {
                 modules = [
                     { key: 'teacher_dashboard', label: '📊 Teacher Overview' },
-                    { key: 'enter_marks', label: '✍️ Enter Student Marks' }
+                    { key: 'enter_marks', label: '✍️ Enter / Edit Marks' },
+                    { key: 'audit', label: '🛡️ Activity History' }
                 ];
             } else if (session.role === 'STUDENT') {
                 modules = [
@@ -489,9 +523,11 @@
                 ];
             }
 
-            modules.forEach((mod, idx) => {
+            const targetTab = (restoreTab && modules.some(m => m.key === restoreTab)) ? restoreTab : modules[0].key;
+
+            modules.forEach((mod) => {
                 const item = document.createElement('div');
-                item.className = `nav-item ${idx === 0 ? 'active' : ''}`;
+                item.className = `nav-item ${mod.key === targetTab ? 'active' : ''}`;
                 item.innerHTML = `<span>${mod.label}</span>`;
                 item.onclick = () => {
                     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -501,12 +537,15 @@
                 nav.appendChild(item);
             });
 
-            renderModule(modules[0].key);
+            renderModule(targetTab);
         }
 
         function renderModule(mod) {
             const ws = document.getElementById('workspaceContent');
             if (!ws) return;
+
+            session.activeTab = mod;
+            saveSession();
 
             if (mod === 'dashboard') {
                 document.getElementById('activeModuleTitle').innerText = 'Admin Dashboard - AGEC';
@@ -526,11 +565,11 @@
 
                         <div class="card">
                             <h3>Welcome to Abidhar Al-ghafar English Centre (AGEC), ${session.fullName}</h3>
-                            <p style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">Quick Summary of Recent Payments & Academic Activities:</p>
+                            <p style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">Recent System Change History (Teacher, Finance & Admin):</p>
                             <table>
-                                <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Recent Action</th></tr></thead>
+                                <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action Recorded</th></tr></thead>
                                 <tbody>
-                                    ${(db.auditLogs || []).slice(0, 6).map(l => `<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}
+                                    ${(db.auditLogs || []).slice(0, 8).map(l => `<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td><span class="status-pill st-approved">${l.role}</span></td><td>${l.action}</td></tr>`).join('')}
                                 </tbody>
                             </table>
                         </div>
@@ -584,26 +623,29 @@
                     <button class="btn btn-warning no-print" onclick="printReport('Examination Results Report')">🖨️ Print Report</button>
                 `;
             } else if (mod === 'finance') {
-                document.getElementById('activeModuleTitle').innerText = 'Finance Portal - Record & Issue Receipts';
+                document.getElementById('activeModuleTitle').innerText = 'Finance & Receipts Portal';
+                const canManageReceipts = ['SUPER_ADMIN', 'FINANCE'].includes(session.role);
+
                 ws.innerHTML = `
+                    ${canManageReceipts ? `
                     <div class="card no-print">
-                        <h3>💰 Record Payment & Issue Receipt</h3>
+                        <h3>💰 Record Payment, Issue & Attach Receipt (${session.role.replace('_', ' ')})</h3>
                         <div class="form-grid">
                             <div><label>Student</label><select id="payReg">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select></div>
                             <div><label>Amount (TZS)</label><input type="number" id="payAmount" placeholder="50000"></div>
                             <div><label>Payment Method</label><select id="payMethod"><option>Cash</option><option>Bank / Control Number</option><option>Mobile Money</option></select></div>
-                            <div><label>Attach Receipt (Image / PDF)</label><input type="file" id="payAttach"></div>
+                            <div><label>Attach Receipt (Image / PDF)</label><input type="file" id="payAttach" accept="image/*,.pdf"></div>
                         </div>
-                        <button type="button" class="btn btn-success" onclick="recordPayment()">Record & Issue Receipt</button>
-                    </div>
+                        <button type="button" class="btn btn-success" onclick="recordPayment()">Record & Attach Receipt</button>
+                    </div>` : ''}
 
                     <div id="printableArea">
                         <div class="card">
                             <h3>📄 Issued Payment Receipts & Attachments</h3>
                             <table>
-                               <thead><tr><th>Receipt No</th><th>Reg No</th><th>Student Name</th><th>Amount</th><th>Method</th><th>Date</th><th>Attached Document</th></tr></thead>
+                               <thead><tr><th>Receipt No</th><th>Reg No</th><th>Student Name</th><th>Amount</th><th>Method</th><th>Date</th><th>Attached Receipt</th>${canManageReceipts ? '<th class="no-print">Action</th>' : ''}</tr></thead>
                                <tbody>
-                                   ${(db.payments || []).map(p => `<tr>
+                                   ${(db.payments || []).map((p, idx) => `<tr>
                                        <td><strong>#RCP-${p.id}</strong></td>
                                        <td>${p.regNo}</td>
                                        <td>${p.studentName}</td>
@@ -611,8 +653,9 @@
                                        <td>${p.method}</td>
                                        <td>${p.date}</td>
                                        <td>
-                                           ${p.attachmentData ? `<a href="${p.attachmentData}" download="${p.attachmentName}" style="color:var(--primary); font-weight:bold; text-decoration:underline;">📥 Download (${p.attachmentName})</a>` : 'No Attachment'}
+                                           ${p.attachmentData ? `<a href="${p.attachmentData}" download="${p.attachmentName}" style="color:var(--primary); font-weight:bold; text-decoration:underline;">📥 View / Download (${p.attachmentName})</a>` : (p.attachmentName || 'No Attachment')}
                                        </td>
+                                       ${canManageReceipts ? `<td class="no-print"><button type="button" class="btn btn-danger btn-sm" onclick="deleteReceipt(${idx})">Delete</button></td>` : ''}
                                    </tr>`).join('')}
                                </tbody>
                             </table>
@@ -671,18 +714,28 @@
                 `;
             } else if (mod === 'teacher_dashboard') {
                 document.getElementById('activeModuleTitle').innerText = 'Teacher Portal';
-                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">Use the menu to submit student scores and print reports.</p></div>`;
+                ws.innerHTML = `<div class="card"><h3>Welcome, ${session.fullName}</h3><p style="color:var(--text-muted);">Use the left menu to submit or update student exam marks. All changes are logged in system history.</p></div>`;
             } else if (mod === 'enter_marks') {
-                document.getElementById('activeModuleTitle').innerText = 'Enter Student Marks';
+                document.getElementById('activeModuleTitle').innerText = 'Enter / Edit Student Marks';
                 ws.innerHTML = `
                     <div class="card">
-                        <h3>✍️ Submit Exam Marks</h3>
+                        <h3>✍️ Submit or Update Exam Marks</h3>
                         <div>
                             <label>Student</label><select id="mStudent">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select>
                             <label>Subject</label><input type="text" id="mSubject" placeholder="Subject Name">
                             <label>Marks (0-100)</label><input type="number" id="mScore" placeholder="85">
                         </div>
-                        <button type="button" class="btn" onclick="teacherSubmitMarks()">Submit Marks</button>
+                        <button type="button" class="btn" onclick="teacherSubmitMarks()">Save Marks</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>📋 Current Recorded Marks</h3>
+                        <table>
+                            <thead><tr><th>Reg No</th><th>Student</th><th>Subject</th><th>Score</th><th>Grade</th></tr></thead>
+                            <tbody>
+                                ${db.exams.map(e => `<tr><td>${e.studentReg}</td><td>${e.studentName}</td><td>${e.subject}</td><td><strong>${e.score}%</strong></td><td>${e.grade}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
                     </div>
                 `;
             } else if (mod === 'student_portal') {
@@ -714,15 +767,23 @@
                     <button class="btn btn-warning no-print" onclick="printReport('Student Academic Report')">🖨️ Print Report</button>
                 `;
             } else if (mod === 'audit') {
-                document.getElementById('activeModuleTitle').innerText = 'Audit Logs';
+                document.getElementById('activeModuleTitle').innerText = 'System History & Audit Logs';
+                const filteredLogs = session.role === 'SUPER_ADMIN'
+                    ? db.auditLogs
+                    : db.auditLogs.filter(l => l.user === session.fullName || l.role === session.role);
+
                 ws.innerHTML = `
-                    <div class="card">
-                        <h3>🛡️ System Activity Logs</h3>
-                        <table>
-                            <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th></tr></thead>
-                            <tbody>${db.auditLogs.map(l=>`<tr><td>${l.time}</td><td>${l.user}</td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}</tbody>
-                        </table>
+                    <div id="printableArea">
+                        <div class="card">
+                            <h3>🛡️ Complete Change History & Audit Trail</h3>
+                            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Tracks every action, modification, receipt upload, deletion, and mark update across the system.</p>
+                            <table>
+                                <thead><tr><th>Date & Time</th><th>User</th><th>Role</th><th>Detailed Action</th></tr></thead>
+                                <tbody>${filteredLogs.map(l=>`<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td><span class="status-pill st-approved">${l.role}</span></td><td>${l.action}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
                     </div>
+                    <button class="btn btn-warning no-print" onclick="printReport('System History & Audit Report')">🖨️ Print History Report</button>
                 `;
             }
         }
@@ -766,8 +827,10 @@
                 if (student) student.feePaid = (student.feePaid || 0) + amount;
 
                 if (!db.payments) db.payments = [];
+                const nextId = db.payments.length > 0 ? Math.max(...db.payments.map(p => p.id)) + 1 : 1;
+
                 db.payments.unshift({
-                    id: db.payments.length + 1,
+                    id: nextId,
                     regNo: data[0],
                     studentName: data[1],
                     amount: amount,
@@ -777,9 +840,8 @@
                     attachmentData: fileData
                 });
 
-                saveSystem();
-                logAudit(`Issued payment receipt for ${data[1]} (${amount.toLocaleString()} TZS)`);
-                alert('Payment recorded and receipt issued successfully with attachment!');
+                logAudit(`Recorded payment & issued receipt #RCP-${nextId} for ${data[1]} (${amount.toLocaleString()} TZS) [Attachment: ${fileName}]`);
+                alert('Payment recorded and receipt attached successfully!');
                 renderModule('finance');
             };
 
@@ -793,6 +855,26 @@
             } else {
                 savePaymentRecord('No Attachment', '');
             }
+        }
+
+        function deleteReceipt(index) {
+            const receipt = db.payments[index];
+            if (!receipt) return;
+
+            if (!confirm(`Are you sure you want to delete Receipt #RCP-${receipt.id} for ${receipt.studentName} (${Number(receipt.amount).toLocaleString()} TZS)?`)) {
+                return;
+            }
+
+            // Deduct amount back from student's paid balance
+            const student = db.students.find(s => s.regNo === receipt.regNo);
+            if (student) {
+                student.feePaid = Math.max(0, (student.feePaid || 0) - Number(receipt.amount));
+            }
+
+            db.payments.splice(index, 1);
+            logAudit(`Deleted Receipt #RCP-${receipt.id} for ${receipt.studentName} (${Number(receipt.amount).toLocaleString()} TZS)`);
+            alert('Receipt deleted and student balance adjusted.');
+            renderModule('finance');
         }
 
         function createNewUser() {
@@ -828,7 +910,6 @@
                 });
             }
 
-            saveSystem();
             logAudit(`Created new ${role} account: ${name} (${username})`);
             alert(`Account created successfully for ${name}!`);
             renderModule('manage_users');
@@ -838,20 +919,30 @@
             const st = document.getElementById('mStudent').value.split('|');
             const subject = document.getElementById('mSubject').value.trim();
             const score = parseInt(document.getElementById('mScore').value);
-            if (!subject || isNaN(score)) { alert('Fill all fields correctly.'); return; }
+            if (!subject || isNaN(score) || score < 0 || score > 100) { alert('Enter valid subject and marks (0-100).'); return; }
+            
             const grade = score >= 80 ? 'A' : (score >= 70 ? 'B' : (score >= 60 ? 'C' : 'D'));
-            db.exams.push({ studentReg: st[0], studentName: st[1], subject, score, grade, status: 'Published' });
-            saveSystem();
-            logAudit(`Submitted ${subject} marks (${score}%) for ${st[1]}`);
-            alert('Marks submitted successfully!');
+            const existingIdx = db.exams.findIndex(e => e.studentReg === st[0] && e.subject.toLowerCase() === subject.toLowerCase());
+
+            if (existingIdx !== -1) {
+                const oldScore = db.exams[existingIdx].score;
+                db.exams[existingIdx].score = score;
+                db.exams[existingIdx].grade = grade;
+                logAudit(`Updated ${subject} marks for ${st[1]} (${st[0]}) from ${oldScore}% to ${score}%`);
+            } else {
+                db.exams.push({ studentReg: st[0], studentName: st[1], subject, score, grade, status: 'Published' });
+                logAudit(`Entered new ${subject} marks (${score}% - Grade ${grade}) for ${st[1]} (${st[0]})`);
+            }
+
+            alert('Marks saved and recorded in system history!');
             document.getElementById('mSubject').value = '';
             document.getElementById('mScore').value = '';
+            renderModule('enter_marks');
         }
 
         function toggleLock(role, index) {
             systemUsers[role][index].locked = !systemUsers[role][index].locked;
-            saveSystem();
-            logAudit(`${systemUsers[role][index].locked ? 'Locked' : 'Unlocked'} user: ${systemUsers[role][index].username}`);
+            logAudit(`${systemUsers[role][index].locked ? 'Locked' : 'Unlocked'} user account: ${systemUsers[role][index].username}`);
             renderModule('manage_users');
         }
 
@@ -859,7 +950,6 @@
             const p = document.getElementById(`p_${role}_${index}`).value.trim();
             if (!p) { alert('Enter a new password.'); return; }
             systemUsers[role][index].password = p;
-            saveSystem();
             logAudit(`Updated password for user: ${systemUsers[role][index].username}`);
             alert('Password updated successfully!');
             renderModule('manage_users');
