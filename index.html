@@ -278,7 +278,6 @@
         .st-locked { background: #fee2e2; color: #dc2626; }
         .hidden { display: none !important; }
 
-        /* --- PRINT STYLING --- */
         @media print {
             body * { visibility: hidden; }
             #printableArea, #printableArea * { visibility: visible; }
@@ -509,6 +508,7 @@
 
         function renderModule(mod) {
             const ws = document.getElementById('workspaceContent');
+            if (!ws) return;
 
             if (mod === 'dashboard') {
                 document.getElementById('activeModuleTitle').innerText = 'Admin Dashboard - AGEC';
@@ -520,8 +520,8 @@
                     <div id="printableArea">
                         <div class="stats-grid">
                             <div class="stat-card"><div class="label">Total Students</div><div class="value">${db.students.length}</div></div>
-                            <div class="stat-card"><div class="label">Active Teachers</div><div class="value">${systemUsers.TEACHER.length}</div></div>
-                            <div class="stat-card"><div class="label">Finance Officers</div><div class="value">${systemUsers.FINANCE.length}</div></div>
+                            <div class="stat-card"><div class="label">Active Teachers</div><div class="value">${(systemUsers.TEACHER || []).length}</div></div>
+                            <div class="stat-card"><div class="label">Finance Officers</div><div class="value">${(systemUsers.FINANCE || []).length}</div></div>
                             <div class="stat-card"><div class="label">Collected Fees</div><div class="value" style="color:var(--success);">${totalCollected.toLocaleString()} TZS</div></div>
                             <div class="stat-card"><div class="label">Remaining Fees</div><div class="value" style="color:var(--danger);">${pendingFees.toLocaleString()} TZS</div></div>
                         </div>
@@ -532,7 +532,7 @@
                             <table>
                                 <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Recent Action</th></tr></thead>
                                 <tbody>
-                                    ${db.auditLogs.slice(0, 6).map(l => `<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}
+                                    ${(db.auditLogs || []).slice(0, 6).map(l => `<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td>${l.role}</td><td>${l.action}</td></tr>`).join('')}
                                 </tbody>
                             </table>
                         </div>
@@ -590,13 +590,13 @@
                 ws.innerHTML = `
                     <div class="card no-print">
                         <h3>💰 Record Payment & Issue Receipt</h3>
-                        <div class="form-grid" onkeydown="checkFormEnter(event, 'recordPayment')">
+                        <div class="form-grid">
                             <div><label>Student</label><select id="payReg">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select></div>
                             <div><label>Amount (TZS)</label><input type="number" id="payAmount" placeholder="50000"></div>
                             <div><label>Payment Method</label><select id="payMethod"><option>Cash</option><option>Bank / Control Number</option><option>Mobile Money</option></select></div>
                             <div><label>Attach Receipt / Proof</label><input type="file" id="payAttach"></div>
                         </div>
-                        <button class="btn btn-success" onclick="recordPayment()">Record & Issue Receipt</button>
+                        <button type="button" class="btn btn-success" onclick="recordPayment()">Record & Issue Receipt</button>
                     </div>
 
                     <div id="printableArea">
@@ -605,7 +605,7 @@
                             <table>
                                <thead><tr><th>Receipt No</th><th>Reg No</th><th>Student Name</th><th>Amount</th><th>Method</th><th>Date</th><th>Attachment</th></tr></thead>
                                <tbody>
-                                   ${db.payments.map(p => `<tr>
+                                   ${(db.payments || []).map(p => `<tr>
                                        <td><strong>#RCP-${p.id}</strong></td>
                                        <td>${p.regNo}</td>
                                        <td>${p.studentName}</td>
@@ -625,7 +625,7 @@
                 ws.innerHTML = `
                     <div class="card">
                         <h3>➕ Create New User (Username & Password)</h3>
-                        <div class="form-grid" onkeydown="checkFormEnter(event, 'createNewUser')">
+                        <div class="form-grid">
                             <div>
                                 <label>Role</label>
                                 <select id="newRole">
@@ -677,7 +677,7 @@
                 ws.innerHTML = `
                     <div class="card">
                         <h3>✍️ Submit Exam Marks</h3>
-                        <div onkeydown="checkFormEnter(event, 'teacherSubmitMarks')">
+                        <div>
                             <label>Student</label><select id="mStudent">${db.students.map(s=>`<option value="${s.regNo}|${s.name}">${s.regNo} - ${s.name}</option>`).join('')}</select>
                             <label>Subject</label><input type="text" id="mSubject" placeholder="Subject Name">
                             <label>Marks (0-100)</label><input type="number" id="mScore" placeholder="85">
@@ -752,7 +752,9 @@
         }
 
         function recordPayment() {
-            const data = document.getElementById('payReg').value.split('|');
+            const regVal = document.getElementById('payReg').value;
+            if (!regVal) { alert('Please select a student.'); return; }
+            const data = regVal.split('|');
             const amount = parseInt(document.getElementById('payAmount').value);
             const method = document.getElementById('payMethod').value;
             const attachInput = document.getElementById('payAttach');
@@ -763,6 +765,7 @@
             const student = db.students.find(s => s.regNo === data[0]);
             if (student) student.feePaid = (student.feePaid || 0) + amount;
 
+            if (!db.payments) db.payments = [];
             db.payments.unshift({
                 id: db.payments.length + 1,
                 regNo: data[0],
