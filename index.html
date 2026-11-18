@@ -418,7 +418,6 @@
             saveSystem();
         }
 
-        // --- AUTO LOGOUT AFTER 1 HOUR OF INACTIVITY ---
         function resetIdleTimer() {
             clearTimeout(idleTimer);
             if (!session || !session.user) return;
@@ -428,7 +427,6 @@
             }, 3600000);
         }
 
-        // --- RESTORE SESSION ON PAGE REFRESH ---
         window.onload = () => {
             ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => {
                 window.addEventListener(evt, resetIdleTimer);
@@ -687,7 +685,7 @@
                     <div class="card">
                         <h3>🔒 User Access Control & Password Reset</h3>
                         <table>
-                            <thead><tr><th>Role</th><th>Name</th><th>Username</th><th>Status</th><th>Update Password</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Role</th><th>Name</th><th>Username</th><th>Status</th><th>Update Password</th><th>Actions</th></tr></thead>
                             <tbody>
                                 ${Object.entries(systemUsers).flatMap(([role, list]) => (list || []).map((u, i) => `
                                     <tr>
@@ -696,7 +694,7 @@
                                         <td><strong>${u.username}</strong></td>
                                         <td><span class="status-pill ${u.locked ? 'st-locked' : 'st-approved'}">${u.locked ? 'Locked' : 'Active'}</span></td>
                                         <td>
-                                            <input type="text" id="p_${role}_${i}" placeholder="New pass" style="width:100px; display:inline-block; margin:0; padding:4px; font-size:12px;">
+                                            <input type="text" id="p_${role}_${i}" placeholder="New pass" style="width:90px; display:inline-block; margin:0; padding:4px; font-size:11px;">
                                             <button type="button" class="btn btn-sm btn-warning" onclick="updatePass('${role}', ${i})">Save</button>
                                         </td>
                                         <td>
@@ -704,6 +702,7 @@
                                                 <button type="button" class="btn btn-sm ${u.locked ? 'btn-success' : 'btn-danger'}" onclick="toggleLock('${role}', ${i})">
                                                     ${u.locked ? 'Unlock' : 'Lock'}
                                                 </button>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteUser('${role}', ${i})" style="margin-left:5px;">Delete</button>
                                             `}
                                         </td>
                                     </tr>
@@ -775,11 +774,16 @@
                 ws.innerHTML = `
                     <div id="printableArea">
                         <div class="card">
-                            <h3>🛡️ Complete Change History & Audit Trail</h3>
-                            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Tracks every action, modification, receipt upload, deletion, and mark update across the system.</p>
+                            <h3>
+                                <span>🛡️ Complete Change History & Audit Trail</span>
+                                <input type="text" id="auditSearch" placeholder="Search history..." onkeyup="filterAuditLogs()" style="width:200px; margin:0; padding:6px; font-size:12px;" class="no-print">
+                            </h3>
+                            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Tracks every action, modification, user deletion, receipt upload, and mark update across the system.</p>
                             <table>
                                 <thead><tr><th>Date & Time</th><th>User</th><th>Role</th><th>Detailed Action</th></tr></thead>
-                                <tbody>${filteredLogs.map(l=>`<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td><span class="status-pill st-approved">${l.role}</span></td><td>${l.action}</td></tr>`).join('')}</tbody>
+                                <tbody id="auditTableBody">
+                                    ${filteredLogs.map(l=>`<tr><td>${l.time}</td><td><strong>${l.user}</strong></td><td><span class="status-pill st-approved">${l.role}</span></td><td>${l.action}</td></tr>`).join('')}
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -791,6 +795,15 @@
         function filterStudents() {
             const query = document.getElementById('studentSearch').value.toLowerCase();
             const rows = document.querySelectorAll('#studentTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function filterAuditLogs() {
+            const query = document.getElementById('auditSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#auditTableBody tr');
             rows.forEach(row => {
                 const text = row.innerText.toLowerCase();
                 row.style.display = text.includes(query) ? '' : 'none';
@@ -865,7 +878,6 @@
                 return;
             }
 
-            // Deduct amount back from student's paid balance
             const student = db.students.find(s => s.regNo === receipt.regNo);
             if (student) {
                 student.feePaid = Math.max(0, (student.feePaid || 0) - Number(receipt.amount));
@@ -910,8 +922,24 @@
                 });
             }
 
+            saveSystem();
             logAudit(`Created new ${role} account: ${name} (${username})`);
             alert(`Account created successfully for ${name}!`);
+            renderModule('manage_users');
+        }
+
+        function deleteUser(role, index) {
+            const user = systemUsers[role][index];
+            if (!user) return;
+
+            if (!confirm(`Are you sure you want to delete user account: ${user.name} (${user.username})?`)) {
+                return;
+            }
+
+            systemUsers[role].splice(index, 1);
+            saveSystem();
+            logAudit(`Deleted user account: ${user.name} (${user.username}) under role ${role}`);
+            alert('User account deleted successfully!');
             renderModule('manage_users');
         }
 
@@ -934,6 +962,7 @@
                 logAudit(`Entered new ${subject} marks (${score}% - Grade ${grade}) for ${st[1]} (${st[0]})`);
             }
 
+            saveSystem();
             alert('Marks saved and recorded in system history!');
             document.getElementById('mSubject').value = '';
             document.getElementById('mScore').value = '';
@@ -942,6 +971,7 @@
 
         function toggleLock(role, index) {
             systemUsers[role][index].locked = !systemUsers[role][index].locked;
+            saveSystem();
             logAudit(`${systemUsers[role][index].locked ? 'Locked' : 'Unlocked'} user account: ${systemUsers[role][index].username}`);
             renderModule('manage_users');
         }
@@ -950,6 +980,7 @@
             const p = document.getElementById(`p_${role}_${index}`).value.trim();
             if (!p) { alert('Enter a new password.'); return; }
             systemUsers[role][index].password = p;
+            saveSystem();
             logAudit(`Updated password for user: ${systemUsers[role][index].username}`);
             alert('Password updated successfully!');
             renderModule('manage_users');
